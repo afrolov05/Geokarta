@@ -2,1034 +2,156 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <title>Geo Cashback MVP</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Геокарта — Кэшбэк</title>
 
   <!-- Leaflet -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
+  <!-- Base UI -->
   <style>
-    :root {
-      --bg-main: #05060a;
-      --bg-card: #15161c;
-      --bg-tab: #1f2027;
-      --txt-main: #ffffff;
-      --txt-soft: #c4c4d0;
-      --txt-muted: #8f90a0;
-      --radius-xl: 26px;
-    }
-
-    * {
+    body {
       margin: 0;
       padding: 0;
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-      font-family: system-ui, -apple-system, "SF Pro Display", sans-serif;
-    }
-
-    body {
-      background: #05060a;
-      height: 100vh;
+      background: #0B0B0C;
+      color: white;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       overflow: hidden;
-      display: flex;
-      justify-content: center;
     }
 
-    .app-shell {
-      width: 100%;
-      max-width: 430px;
-      height: 100vh;
-      position: relative;
-      overflow: hidden;
-      background: #05060a;
-    }
-
-    @media (min-width: 768px) {
-      .app-shell {
-        margin: 16px auto;
-        height: calc(100vh - 32px);
-        border-radius: 30px;
-        box-shadow: 0 18px 45px rgba(0,0,0,0.7);
-      }
-    }
-
+    /* MAP */
     #map {
-      position: absolute;
-      inset: 0;
-      z-index: 1;
+      width: 100vw;
+      height: 100vh;
     }
 
-    .leaflet-overlay-pane {
-      z-index: 900 !important;
-    }
-    .leaflet-overlay-pane svg {
-      z-index: 9999 !important;
-    }
-    .leaflet-marker-pane {
-      z-index: 40 !important;
-    }
-    .leaflet-interactive {
-      transition: fill-opacity 0.35s ease;
-    }
-
-    /* BACK BUTTON FOR HEAT MODE */
-    .back-button {
-      position: absolute;
-      top: 14px;
-      left: 14px;
-      z-index: 50;
-      width: 40px;
-      height: 40px;
-      border-radius: 999px;
-      border: none;
-      cursor: pointer;
-      background: rgba(0,0,0,0.7);
-      color: #ffffff;
-      font-size: 20px;
-      display: none;
-      align-items: center;
-      justify-content: center;
-    }
-
-    /* BOTTOM PANEL */
-    .bottom-panel {
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      padding: 10px 12px 16px;
-      z-index: 3;
-      background: linear-gradient(
-        to top,
-        rgba(5, 6, 10, 0.98),
-        rgba(5, 6, 10, 0.7),
-        transparent
-      );
-      pointer-events: none;
-    }
-
-    .bottom-inner {
-      pointer-events: auto;
-    }
-
-    .tabs-row {
+    /* FILTER PANEL */
+    .filter-bar {
+      position: fixed;
+      bottom: 22px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(20,20,21,0.85);
+      backdrop-filter: blur(14px);
       display: flex;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-
-    .tab {
-      flex: 1;
-      text-align: center;
-      background: var(--bg-tab);
-      color: var(--txt-soft);
-      padding: 8px 4px;
-      border-radius: 999px;
-      font-size: 12px;
-      cursor: pointer;
-    }
-
-    .tab.active {
-      background: linear-gradient(145deg, #ff7b5f, #ff2140);
-      color: #fff;
-      font-weight: 600;
-    }
-
-    .search-row {
-      display: flex;
-      align-items: center;
-      background: #1c1d24;
-      padding: 8px 12px;
-      border-radius: 999px;
-      margin-bottom: 8px;
-      color: var(--txt-soft);
-      font-size: 13px;
-    }
-
-    .search-icon {
-      margin-right: 6px;
-      font-size: 12px;
-      opacity: 0.85;
-    }
-
-    .search-row input {
-      flex: 1;
-      background: transparent;
-      border: none;
-      outline: none;
-      color: #fff;
-      font-size: 13px;
-    }
-
-    .categories-row {
-      display: none;
-    }
-
-    .banner {
-      background: #46b6ff;
-      color: #05253c;
+      gap: 10px;
+      padding: 10px 16px;
       border-radius: 18px;
-      padding: 10px 12px;
-      font-size: 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
+      z-index: 9999;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .filter-btn {
+      background: #151518;
+      color: #e6e6e6;
+      border: 1px solid #2A2A2C;
+      border-radius: 12px;
+      padding: 8px 14px;
+      font-size: 15px;
       cursor: pointer;
+      transition: 0.25s;
     }
 
-    .banner-left {
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
+    .filter-btn.active {
+      background: #E11D48;
+      border-color: #E11D48;
+      color: white;
     }
 
-    .banner-icon {
-      font-size: 18px;
+    /* Popup styling */
+    .leaflet-popup-content-wrapper {
+      background: #ffffff;
+      color: #000;
+      border-radius: 12px;
+      padding: 10px 14px;
     }
 
-    .banner-title {
-      font-weight: 600;
-      margin-bottom: 2px;
-    }
-
-    .banner-text {
-      opacity: 0.9;
-    }
-
-    .banner-arrow {
-      font-size: 16px;
-    }
-
-    .card-guide {
-      background: var(--bg-card);
-      border-radius: var(--radius-xl);
-      padding: 12px 14px;
-      border: 1px solid rgba(255,255,255,0.05);
-    }
-
-    .guide-steps {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-bottom: 8px;
-    }
-
-    .step {
-      width: 26px;
-      height: 26px;
-      border-radius: 999px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 12px;
-      border: 1px solid rgba(255,255,255,0.2);
-      background: #1d1e25;
-      color: var(--txt-soft);
-      cursor: pointer;
-    }
-    .step.active {
-      background: linear-gradient(145deg, #ff7b5f, #ff2140);
-      border: none;
-      color: #fff;
-      font-weight: 600;
-    }
-    .step.done {
-      background: #30313b;
-      border: none;
-      color: #a0a1af;
-    }
-
-    .step-line {
-      flex: 1;
-      height: 1.5px;
-      background: rgba(255,255,255,0.2);
-    }
-
-    .guide-title {
-      font-size: 14px;
-      font-weight: 600;
-      color: #fff;
-      margin-bottom: 2px;
-    }
-
-    .guide-subtitle {
-      font-size: 11px;
-      color: var(--txt-muted);
-      margin-bottom: 8px;
-    }
-
-    .guide-place-card {
-      border-radius: 18px;
-      padding: 10px 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      cursor: pointer;
-      color: #fff;
-    }
-
-    .grad-low {
-      background: linear-gradient(135deg, #2f7d4b, #29d9a6);
-    }
-
-    .grad-mid {
-      background: linear-gradient(135deg, #c08b2c, #ffb44a);
-    }
-
-    .grad-high {
-      background: linear-gradient(135deg, #ff4a4a, #ff2140);
-    }
-
-    .guide-place-main {
-      font-size: 13px;
-      color: #fff;
-      flex: 1;
-    }
-
-    .guide-place-name {
-      font-weight: 600;
-      margin-bottom: 3px;
-      color: #fff;
-    }
-
-    .guide-place-address {
-      font-size: 11px;
-      color: #f5f5f5;
-      opacity: 0.9;
-    }
-
-    .guide-place-side {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 6px;
-    }
-
-    .guide-place-meta {
-      text-align: right;
-      font-size: 11px;
-      color: #f5f5f5;
-    }
-
-    .tag {
-      display: inline-block;
-      padding: 3px 8px;
-      border-radius: 999px;
-      background: rgba(0,0,0,0.22);
-      margin-bottom: 4px;
-      font-size: 10px;
-    }
-
-    .guide-check {
-      width: 34px;
-      height: 34px;
-      border-radius: 50%;
-      border: none;
-      cursor: pointer;
-      background: linear-gradient(135deg, #ff7b5f, #ff2140);
-      color: #ffffff;
-      font-size: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    /* DETAIL CARD */
-    .place-detail-wrapper {
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      padding: 0 12px 18px;
-      z-index: 4;
-      display: none;
-      background: linear-gradient(
-        to top,
-        rgba(5, 6, 10, 0.98),
-        rgba(5, 6, 10, 0.7),
-        transparent
-      );
-      pointer-events: none;
-    }
-
-    .place-detail {
-      background: var(--bg-card);
-      border-radius: var(--radius-xl);
-      padding: 16px;
-      border: 1px solid rgba(255,255,255,0.06);
-      opacity: 0;
-      transform: translateY(40px);
-      transition: 0.28s ease;
-      pointer-events: auto;
-    }
-
-    .place-detail.show {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .detail-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-
-    .detail-logo {
-      width: 46px;
-      height: 46px;
-      border-radius: 14px;
-      background: #2a2b33;
-      object-fit: contain;
-    }
-
-    .detail-close {
-      font-size: 24px;
-      cursor: pointer;
-      opacity: 0.8;
-      color: #fff;
-    }
-
-    .detail-title {
-      font-size: 17px;
-      font-weight: 600;
-      margin-bottom: 4px;
-      color: #fff;
-    }
-
-    .detail-category {
-      display: inline-block;
-      padding: 4px 10px;
-      border-radius: 999px;
-      font-size: 11px;
-      margin-bottom: 6px;
-      color: #fff;
-    }
-
-    .detail-row {
-      font-size: 13px;
-      color: var(--txt-soft);
-      margin-bottom: 4px;
-    }
-
-    /* Locate */
-    .btn-locate {
-      position: absolute;
-      right: 16px;
-      bottom: 210px;
-      width: 44px;
-      height: 44px;
-      border-radius: 999px;
-      z-index: 3;
-      background: radial-gradient(circle at 30% 0, #4bffe5, #1b1c24);
-      border: none;
-      cursor: pointer;
-      font-size: 18px;
-      color: #fff;
-    }
-
-    /* Cashback panel */
-    .cashback-panel-backdrop {
-      position: absolute;
-      inset: 0;
-      background: rgba(0,0,0,0.55);
-      z-index: 5;
-      display: none;
-      justify-content: flex-end;
-      flex-direction: column;
-      align-items: stretch;
-    }
-
-    .cashback-panel {
-      background: #171820;
-      border-radius: 24px 24px 0 0;
-      padding: 14px 16px 18px;
-      border-top: 1px solid rgba(255,255,255,0.08);
-    }
-
-    .cashback-title {
-      font-size: 14px;
-      font-weight: 600;
-      color: #fff;
-      margin-bottom: 10px;
-    }
-
-    .cashback-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 0;
-      font-size: 13px;
-      color: #fff;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-      cursor: pointer;
-    }
-
-    .cashback-item:last-child {
-      border-bottom: none;
-      padding-bottom: 0;
-      cursor: default;
-    }
-
-    .cashback-main {
-      display: flex;
-      flex-direction: column;
-      gap: 1px;
-    }
-
-    .cashback-percent {
-      font-weight: 600;
-    }
-
-    .cashback-sub {
-      font-size: 11px;
-      color: var(--txt-muted);
-    }
-
-    .cashback-radio {
-      width: 18px;
-      height: 18px;
-      border-radius: 999px;
-      border: 2px solid rgba(255,255,255,0.5);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .cashback-radio-inner {
-      width: 10px;
-      height: 10px;
-      border-radius: 999px;
-      background: transparent;
-    }
-
-    .cashback-item.active .cashback-radio-inner {
-      background: linear-gradient(145deg, #ff7b5f, #ff2140);
-    }
-
-    .cashback-locked {
-      font-size: 11px;
-      color: var(--txt-muted);
-      opacity: 0.9;
+    .leaflet-popup-tip {
+      background: #ffffff;
     }
   </style>
 </head>
-
 <body>
-<div class="app-shell">
 
-  <div id="map"></div>
+<!-- MAP -->
+<div id="map"></div>
 
-  <button id="btnBackHeat" class="back-button">←</button>
-  <button id="btnLocate" class="btn-locate">▲</button>
-
-  <div class="bottom-panel">
-    <div class="bottom-inner">
-
-      <div class="tabs-row">
-        <div class="tab active" data-tab="cashback">Ваш кэшбэк</div>
-        <div class="tab" data-tab="nearby">Рядом с вами</div>
-      </div>
-
-      <div class="search-row">
-        <span class="search-icon">⌕</span>
-        <input id="searchInput" placeholder="Поиск">
-      </div>
-
-      <div class="categories-row" id="categoriesRow"></div>
-
-      <div class="banner" id="bannerRain">
-        <div class="banner-left">
-          <div class="banner-icon">💧</div>
-          <div>
-            <div class="banner-title">Ожидаются осадки в виде кэшбэка</div>
-            <div class="banner-text">Нажмите, чтобы посмотреть средний кэшбэк по районам</div>
-          </div>
-        </div>
-        <div class="banner-arrow">›</div>
-      </div>
-
-      <div class="card-guide" id="guideCard">
-        <div class="guide-steps" id="guideSteps"></div>
-
-        <div class="guide-title" id="guideTitle"></div>
-        <div class="guide-subtitle" id="guideSubtitle"></div>
-
-        <div class="guide-place-card grad-mid" id="guidePlaceCard">
-          <div class="guide-place-main">
-            <div class="guide-place-name" id="placeName"></div>
-            <div class="guide-place-address" id="placeAddress"></div>
-          </div>
-          <div class="guide-place-side">
-            <div class="guide-place-meta">
-              <div class="tag" id="placeCategory"></div>
-              <div id="placeDistance"></div>
-              <div id="placeAvgCheck"></div>
-            </div>
-            <button class="guide-check" id="guideCheckBtn">✓</button>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- DETAIL CARD -->
-  <div class="place-detail-wrapper" id="placeDetailWrap">
-    <div class="place-detail" id="placeDetail">
-
-      <div class="detail-header">
-        <img id="detailLogo" class="detail-logo" />
-        <div id="detailClose" class="detail-close">×</div>
-      </div>
-
-      <div class="detail-title" id="detailTitle"></div>
-      <div class="detail-category" id="detailCategory"></div>
-
-      <div class="detail-row" id="detailAddress"></div>
-      <div class="detail-row">Средний чек: <span id="detailAvgCheck"></span></div>
-      <div class="detail-row">Кэшбэк: <span id="detailCashback"></span>%</div>
-    </div>
-  </div>
-
-  <!-- PANEL CATEGORIES (CASHBACK) -->
-  <div class="cashback-panel-backdrop" id="cashbackBackdrop">
-    <div class="cashback-panel" id="cashbackPanel">
-      <div class="cashback-title">Что покажем?</div>
-
-      <div class="cashback-item" data-cb="fastfood">
-        <div class="cashback-main">
-          <div class="cashback-percent">5% Фастфуд</div>
-          <div class="cashback-sub">Для молодёжи</div>
-        </div>
-        <div class="cashback-radio">
-          <div class="cashback-radio-inner"></div>
-        </div>
-      </div>
-
-      <div class="cashback-item" data-cb="sport">
-        <div class="cashback-main">
-          <div class="cashback-percent">5% Спортивные товары</div>
-        </div>
-        <div class="cashback-radio">
-          <div class="cashback-radio-inner"></div>
-        </div>
-      </div>
-
-      <div class="cashback-item" data-cb="active">
-        <div class="cashback-main">
-          <div class="cashback-percent">5% Активный отдых</div>
-        </div>
-        <div class="cashback-radio">
-          <div class="cashback-radio-inner"></div>
-        </div>
-      </div>
-
-      <div class="cashback-item">
-        <div class="cashback-main">
-          <div class="cashback-locked">Ещё одна категория будет доступна с Альфа-Смарт</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
+<!-- FILTERS -->
+<div class="filter-bar">
+  <button class="filter-btn active" data-cat="all">Все</button>
+  <button class="filter-btn" data-cat="active">АЗС</button>
+  <button class="filter-btn" data-cat="fastfood">Рестораны</button>
+  <button class="filter-btn" data-cat="sport">Спорт</button>
+  <button class="filter-btn" data-cat="entertainment">Развлечения</button>
 </div>
 
 <script>
-let allPlaces = [];
-let brandLogos = {};
-let averageZones = [];
+/* ==============================
+   ИНИЦИАЛИЗАЦИЯ КАРТЫ
+   ============================== */
+let map = L.map('map').setView([55.75, 37.61], 11);
 
-let activeTab = "cashback";
-let activeCashbackCategory = null; // фильтр по кешбэк-категории, null = все
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19
+}).addTo(map);
 
-let markersLayer = L.layerGroup();
-let heatLayer = L.layerGroup();
-let markerById = new Map();
+/* ==============================
+   ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
+   ============================== */
+let markers = [];
+let currentCategory = "all";
 
-let userPosition = null;
-let userMarker = null;
-
-let guidePlaces = [];
-let currentStepIndex = 0;
-let heatMode = false;
-
-const map = L.map("map").setView([55.75, 37.62], 11);
-
-L.tileLayer(
-  "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-  {
-    maxZoom: 19,
-    attribution: '&copy; OSM & CARTO'
-  }
-).addTo(map);
-
-markersLayer.addTo(map);
-
-function catColor(c) {
-  switch (c) {
-    case "АЗС": return "#ff3859";
-    case "Рестораны и кафе": return "#ff9f30";
-    case "Спорттовары": return "#29d9a6";
-    case "Развлечения": return "#7c5cff";
-    default: return "#ffffff";
-  }
+/* ==============================
+   ЗАГРУЗКА ТОЧЕК
+   ============================== */
+function loadPoints() {
+  fetch("points.json?v=" + Date.now())  // отключаем кеш GitHub Pages
+    .then(res => res.json())
+    .then(points => renderPoints(points))
+    .catch(err => console.error("Ошибка загрузки points.json:", err));
 }
 
-function haversine(a,b,c,d){
-  const R=6371;
-  const dLat=((c-a)*Math.PI)/180;
-  const dLon=((d-b)*Math.PI)/180;
-  const la=a*Math.PI/180;
-  const lc=c*Math.PI/180;
-  const h=Math.sin(dLat/2)**2 + Math.cos(la)*Math.cos(lc)*Math.sin(dLon/2)**2;
-  return R * 2 * Math.atan2(Math.sqrt(h),Math.sqrt(1-h));
+/* ==============================
+   ОТРИСОВКА ТОЧЕК
+   ============================== */
+function renderPoints(points) {
+  // удалить старые маркеры
+  markers.forEach(m => map.removeLayer(m));
+  markers = [];
+
+  points
+    .filter(p => currentCategory === "all" || p.cbCategory === currentCategory)
+    .forEach(p => {
+      let marker = L.marker([p.lat, p.lon]).addTo(map);
+      marker.bindPopup(`
+        <b>${p.name}</b><br>
+        ${p.address}<br>
+        Средний чек: ${p.avgCheck} ₽<br>
+        Кэшбэк: ${p.cashback}%
+      `);
+      markers.push(marker);
+    });
 }
-function distFmt(km){
-  if(km<1) return Math.round(km*1000)+" м";
-  return km.toFixed(1)+" км";
-}
 
-/* LOAD DATA */
-async function loadData() {
-  const [p, b, z] = await Promise.all([
-    fetch("points.json"),
-    fetch("brands.json"),
-    fetch("average-zones.json")
-  ]);
-  allPlaces = await p.json();
-  brandLogos = await b.json();
-  averageZones = await z.json();
+/* ==============================
+   ФИЛЬТРЫ
+   ============================== */
+document.querySelectorAll(".filter-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
 
-  initUI();
-  buildHeatLayer();
-  rebuildMarkers();
-  buildGuide();
-}
-loadData();
-
-/* UI INIT */
-function initUI() {
-  document.querySelectorAll(".tab").forEach(tab => {
-    tab.onclick = () => {
-      const key = tab.getAttribute("data-tab");
-      activeTab = key;
-      document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
-      tab.classList.add("active");
-
-      if (!heatMode && key === "cashback") {
-        openCashbackPanel();
-      } else {
-        closeCashbackPanel();
-      }
-    };
+    currentCategory = btn.dataset.cat;
+    loadPoints();
   });
+});
 
-  document.querySelector("#searchInput").addEventListener("input", () => {
-    if (!heatMode) {
-      rebuildMarkers();
-      buildGuide();
-    }
-  });
-
-  document.querySelector("#btnLocate").onclick = () => locate();
-  document.querySelector("#guidePlaceCard").onclick = () => {
-    const p = guidePlaces[currentStepIndex];
-    if (!p) return;
-    showDetail(p);
-    map.flyTo([p.lat,p.lon],15,{duration:0.5});
-  };
-  document.querySelector("#guideCheckBtn").onclick = (e) => {
-    e.stopPropagation();
-    advanceGuideStep();
-  };
-
-  document.querySelector("#detailClose").onclick = hideDetail;
-  document.querySelector("#bannerRain").onclick = toggleHeatMode;
-  document.querySelector("#btnBackHeat").onclick = () => {
-    if (heatMode) exitHeatMode();
-  };
-
-  const backdrop = document.querySelector("#cashbackBackdrop");
-  backdrop.addEventListener("click", e => {
-    if (e.target === backdrop) closeCashbackPanel();
-  });
-
-  document.querySelectorAll(".cashback-item[data-cb]").forEach(item => {
-    item.onclick = () => {
-      document
-        .querySelectorAll(".cashback-item[data-cb]")
-        .forEach(i=>i.classList.remove("active"));
-      item.classList.add("active");
-      activeCashbackCategory = item.getAttribute("data-cb");
-
-      closeCashbackPanel();
-      if (!heatMode) {
-        rebuildMarkers();
-        buildGuide();
-      }
-    };
-  });
-}
-
-/* CASHBACK PANEL */
-function openCashbackPanel() {
-  document.querySelector("#cashbackBackdrop").style.display = "flex";
-}
-function closeCashbackPanel() {
-  document.querySelector("#cashbackBackdrop").style.display = "none";
-}
-
-/* FILTERED PLACES */
-function filterPlacesBasic() {
-  const q = document.querySelector("#searchInput").value.toLowerCase();
-  return allPlaces.filter(p => {
-    const okQ = !q || p.name.toLowerCase().includes(q);
-
-    // p.cbCategory: "fastfood" | "sport" | "active" (задать в points.json)
-    const okCb =
-      !activeCashbackCategory ||
-      !p.cbCategory ||
-      p.cbCategory === activeCashbackCategory;
-
-    return okQ && okCb;
-  });
-}
-
-/* MARKERS */
-function rebuildMarkers() {
-  markersLayer.clearLayers();
-  markerById.clear();
-  if (heatMode) return;
-  const filtered = filterPlacesBasic();
-  filtered.forEach(createMarker);
-}
-
-function createMarker(p) {
-  const icon = L.divIcon({
-    html: `<div style="
-      width:14px;height:14px;border-radius:999px;
-      background:${catColor(p.category)};
-      border:2px solid #05060a;
-    "></div>`,
-    className:"",
-    iconSize:[16,16],
-    iconAnchor:[8,8]
-  });
-  const m = L.marker([p.lat,p.lon],{icon}).addTo(markersLayer);
-  markerById.set(p.id, m);
-  m.on("click", () => {
-    showDetail(p);
-    map.flyTo([p.lat,p.lon],15,{duration:0.5});
-  });
-}
-
-/* HEATMAP */
-function buildHeatLayer() {
-  heatLayer.clearLayers();
-  averageZones.forEach(z => {
-    const color =
-      z.value >= 35 ? "#ff3859" :
-      z.value >= 25 ? "#ff9f30" : "#29d9a6";
-
-    const circle = L.circle([z.lat,z.lon],{
-      radius: 900 + z.value * 20,
-      color,
-      fillColor: color,
-      fillOpacity: 0.0,
-      weight: 1.2
-    }).addTo(heatLayer);
-
-    const label = (z.name || "Район") + " — " + z.value + " ₽";
-    circle.bindPopup(label);
-
-    setTimeout(() => {
-      circle.setStyle({fillOpacity: 0.28});
-    }, 50);
-  });
-}
-
-function enterHeatMode() {
-  heatMode = true;
-  map.addLayer(heatLayer);
-  markersLayer.clearLayers();
-
-  document.querySelector(".tabs-row").style.display = "none";
-  document.querySelector(".search-row").style.display = "none";
-  document.querySelector("#bannerRain").style.display = "none";
-  document.querySelector("#guideSteps").style.display = "none";
-  document.querySelector("#guidePlaceCard").style.display = "none";
-
-  document.querySelector("#guideTitle").textContent = "Средний кешбэк по районам";
-  document.querySelector("#guideSubtitle").textContent =
-    "Нажмите на область, чтобы увидеть размер среднего кешбэка.";
-
-  document.querySelector("#btnBackHeat").style.display = "flex";
-}
-
-function exitHeatMode() {
-  heatMode = false;
-  map.removeLayer(heatLayer);
-  rebuildMarkers();
-  buildGuide();
-
-  document.querySelector(".tabs-row").style.display = "flex";
-  document.querySelector(".search-row").style.display = "flex";
-  document.querySelector("#bannerRain").style.display = "flex";
-  document.querySelector("#guideSteps").style.display = "flex";
-  document.querySelector("#guidePlaceCard").style.display = "flex";
-
-  document.querySelector("#btnBackHeat").style.display = "none";
-}
-
-function toggleHeatMode() {
-  if (!heatMode) enterHeatMode();
-  else exitHeatMode();
-}
-
-/* GUIDE — только рестораны */
-function buildGuide() {
-  if (heatMode) return;
-  const baseLat = userPosition ? userPosition.lat : 55.75;
-  const baseLon = userPosition ? userPosition.lon : 37.62;
-
-  const filtered = filterPlacesBasic()
-    .filter(p => p.category === "Рестораны и кафе")
-    .map(p => ({
-      ...p,
-      dist: haversine(baseLat,baseLon,p.lat,p.lon)
-    }))
-    .sort((a,b)=>a.dist-b.dist);
-
-  guidePlaces = filtered.slice(0,5);
-  if (currentStepIndex >= guidePlaces.length) currentStepIndex = 0;
-  renderGuide();
-}
-
-function renderGuide() {
-  const stepsEl = document.querySelector("#guideSteps");
-  stepsEl.innerHTML = "";
-
-  guidePlaces.forEach((p,i)=>{
-    let cls = "step";
-    if (i < currentStepIndex) cls += " done";
-    else if (i === currentStepIndex) cls += " active";
-
-    const s = document.createElement("div");
-    s.className = cls;
-    s.textContent = i+1;
-    s.onclick = () => {
-      currentStepIndex = i;
-      renderGuide();
-      map.flyTo([p.lat,p.lon],15,{duration:0.5});
-      showDetail(p);
-    };
-    stepsEl.appendChild(s);
-    if (i < guidePlaces.length - 1) {
-      const line = document.createElement("div");
-      line.className = "step-line";
-      stepsEl.appendChild(line);
-    }
-  });
-
-  const p = guidePlaces[currentStepIndex];
-  if (!p) {
-    document.querySelector("#guideTitle").textContent = "Нет ресторанов поблизости";
-    document.querySelector("#guideSubtitle").textContent =
-      "Измените поиск или попробуйте позже.";
-    document.querySelector("#placeName").textContent = "";
-    document.querySelector("#placeAddress").textContent = "";
-    document.querySelector("#placeCategory").textContent = "";
-    document.querySelector("#placeDistance").textContent = "";
-    document.querySelector("#placeAvgCheck").textContent = "";
-    return;
-  }
-
-  document.querySelector("#guideTitle").textContent =
-    `Шаг ${currentStepIndex+1}. Посетите ${p.name}`;
-  document.querySelector("#guideSubtitle").textContent =
-    "Мы подобрали места с кэшбэком рядом с вами.";
-
-  const card = document.querySelector("#guidePlaceCard");
-  card.classList.remove("grad-low","grad-mid","grad-high");
-  if (p.cashback >= 6) card.classList.add("grad-high");
-  else if (p.cashback >= 4) card.classList.add("grad-mid");
-  else card.classList.add("grad-low");
-
-  document.querySelector("#placeName").textContent = p.name;
-  document.querySelector("#placeAddress").textContent = p.address;
-  document.querySelector("#placeCategory").textContent = p.category;
-  document.querySelector("#placeDistance").textContent = distFmt(p.dist);
-  document.querySelector("#placeAvgCheck").textContent = `~${p.avgCheck} ₽`;
-}
-
-function advanceGuideStep() {
-  if (guidePlaces.length === 0) return;
-  if (currentStepIndex < guidePlaces.length - 1) {
-    currentStepIndex++;
-  } else {
-    currentStepIndex = 0; // можно зациклить, либо оставить на последнем
-  }
-  renderGuide();
-  const p = guidePlaces[currentStepIndex];
-  if (p) {
-    map.flyTo([p.lat,p.lon],15,{duration:0.5});
-    showDetail(p);
-  }
-}
-
-/* DETAIL CARD */
-function showDetail(p) {
-  const wrap = document.querySelector("#placeDetailWrap");
-  const card = document.querySelector("#placeDetail");
-
-  const logoPath = brandLogos[p.brand] || "logos/default.png";
-
-  document.querySelector("#detailLogo").src = logoPath;
-  document.querySelector("#detailTitle").textContent = p.name;
-  document.querySelector("#detailCategory").textContent = p.category;
-  document.querySelector("#detailCategory").style.background = catColor(p.category);
-  document.querySelector("#detailAddress").textContent = p.address;
-  document.querySelector("#detailAvgCheck").textContent = p.avgCheck + " ₽";
-  document.querySelector("#detailCashback").textContent = p.cashback;
-
-  wrap.style.display = "block";
-  setTimeout(() => card.classList.add("show"), 10);
-}
-function hideDetail() {
-  const wrap = document.querySelector("#placeDetailWrap");
-  const card = document.querySelector("#placeDetail");
-  card.classList.remove("show");
-  setTimeout(() => wrap.style.display = "none", 200);
-}
-
-/* GEOLOCATE */
-function locate() {
-  if (!navigator.geolocation) return;
-  navigator.geolocation.getCurrentPosition(pos => {
-    userPosition = {
-      lat: pos.coords.latitude,
-      lon: pos.coords.longitude
-    };
-    if (!userMarker) {
-      userMarker = L.circleMarker([userPosition.lat,userPosition.lon],{
-        radius: 6,
-        color: "#00ffb3",
-        fillOpacity: 0.9
-      }).addTo(map);
-    } else {
-      userMarker.setLatLng([userPosition.lat, userPosition.lon]);
-    }
-    map.setView([userPosition.lat,userPosition.lon], 13);
-    buildGuide();
-  });
-}
+/* ==============================
+   ЗАПУСК
+   ============================== */
+loadPoints();
 </script>
+
 </body>
 </html>
