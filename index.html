@@ -69,7 +69,7 @@
       z-index: 1;
     }
 
-    /* ========= BOTTOM UI (как в фигме) ========= */
+    /* ========= BOTTOM UI ========= */
 
     .bottom-panel {
       position: absolute;
@@ -121,10 +121,13 @@
       padding: 8px 12px;
       border-radius: 999px;
       margin-bottom: 8px;
+      color: var(--txt-soft);
+      font-size: 13px;
     }
 
-    .search-row span {
+    .search-icon {
       margin-right: 6px;
+      font-size: 12px;
       opacity: 0.85;
     }
 
@@ -144,7 +147,6 @@
       scrollbar-width: none;
       margin-bottom: 8px;
     }
-
     .categories-row::-webkit-scrollbar { display: none; }
 
     .chip {
@@ -188,9 +190,14 @@
       cursor: pointer;
     }
 
+    .banner-left {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
     .banner-icon {
       font-size: 18px;
-      margin-right: 6px;
     }
 
     .banner-title {
@@ -199,7 +206,7 @@
     }
 
     .banner-text {
-      opacity: 0.85;
+      opacity: 0.9;
     }
 
     .banner-arrow {
@@ -250,6 +257,7 @@
     .guide-title {
       font-size: 14px;
       font-weight: 600;
+      color: #fff;
       margin-bottom: 2px;
     }
 
@@ -259,45 +267,62 @@
       margin-bottom: 8px;
     }
 
+    /* градиентные карточки, как в фигме */
     .guide-place-card {
-      background: var(--bg-card-soft);
       border-radius: 18px;
       padding: 10px 12px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       cursor: pointer;
+      color: #fff;
+    }
+
+    .grad-low {
+      background: linear-gradient(135deg, #2f7d4b, #29d9a6);
+    }
+
+    .grad-mid {
+      background: linear-gradient(135deg, #c08b2c, #ffb44a);
+    }
+
+    .grad-high {
+      background: linear-gradient(135deg, #ff4a4a, #ff2140);
     }
 
     .guide-place-main {
       font-size: 13px;
+      color: #fff;
     }
 
     .guide-place-name {
       font-weight: 600;
-      margin-bottom: 2px;
+      margin-bottom: 3px;
+      color: #fff;
     }
 
     .guide-place-address {
       font-size: 11px;
-      color: var(--txt-soft);
+      color: #f5f5f5;
+      opacity: 0.9;
     }
 
     .guide-place-meta {
       text-align: right;
       font-size: 11px;
-      color: var(--txt-soft);
+      color: #f5f5f5;
     }
 
     .tag {
       display: inline-block;
       padding: 3px 8px;
       border-radius: 999px;
-      background: #343542;
+      background: rgba(0,0,0,0.22);
       margin-bottom: 4px;
+      font-size: 10px;
     }
 
-    /* DETAIL CARD (по тапу на маркер/гид) */
+    /* DETAIL CARD */
 
     .place-detail-wrapper {
       position: absolute;
@@ -351,12 +376,14 @@
       font-size: 24px;
       cursor: pointer;
       opacity: 0.8;
+      color: #fff;
     }
 
     .detail-title {
       font-size: 17px;
       font-weight: 600;
       margin-bottom: 4px;
+      color: #fff;
     }
 
     .detail-category {
@@ -374,7 +401,7 @@
       margin-bottom: 4px;
     }
 
-    /* Locate button */
+    /* Locate button без эмодзи */
     .btn-locate {
       position: absolute;
       right: 16px;
@@ -387,6 +414,91 @@
       border: none;
       cursor: pointer;
       font-size: 18px;
+      color: #fff;
+    }
+
+    /* Панель категорий кэшбэка (таб "Категории") */
+
+    .cashback-panel-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 5;
+      display: none;
+      justify-content: flex-end;
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .cashback-panel {
+      background: #171820;
+      border-radius: 24px 24px 0 0;
+      padding: 14px 16px 18px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .cashback-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+
+    .cashback-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      font-size: 13px;
+      color: #fff;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .cashback-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .cashback-main {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .cashback-percent {
+      font-weight: 600;
+    }
+
+    .cashback-sub {
+      font-size: 11px;
+      color: var(--txt-muted);
+    }
+
+    .cashback-radio {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      border: 2px solid rgba(255,255,255,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .cashback-radio-inner {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: transparent;
+    }
+
+    .cashback-item.active .cashback-radio-inner {
+      background: linear-gradient(145deg, #ff7b5f, #ff2140);
+    }
+
+    .cashback-locked {
+      font-size: 11px;
+      color: var(--txt-muted);
+      opacity: 0.9;
     }
   </style>
 </head>
@@ -396,7 +508,7 @@
 
   <div id="map"></div>
 
-  <button id="btnLocate" class="btn-locate">📍</button>
+  <button id="btnLocate" class="btn-locate">▲</button>
 
   <!-- BOTTOM UI -->
   <div class="bottom-panel">
@@ -409,14 +521,14 @@
       </div>
 
       <div class="search-row">
-        <span>🔍</span>
+        <span class="search-icon">⌕</span>
         <input id="searchInput" placeholder="Поиск">
       </div>
 
       <div class="categories-row" id="categoriesRow"></div>
 
       <div class="banner" id="bannerRain">
-        <div style="display:flex;align-items:flex-start;">
+        <div class="banner-left">
           <div class="banner-icon">💧</div>
           <div>
             <div class="banner-title">Ожидаются осадки в виде кэшбэка</div>
@@ -432,7 +544,7 @@
         <div class="guide-title" id="guideTitle"></div>
         <div class="guide-subtitle" id="guideSubtitle"></div>
 
-        <div class="guide-place-card" id="guidePlaceCard">
+        <div class="guide-place-card grad-mid" id="guidePlaceCard">
           <div class="guide-place-main">
             <div class="guide-place-name" id="placeName"></div>
             <div class="guide-place-address" id="placeAddress"></div>
@@ -466,6 +578,47 @@
     </div>
   </div>
 
+  <!-- PANEL CATEGORIES (CASHBACK) -->
+  <div class="cashback-panel-backdrop" id="cashbackBackdrop">
+    <div class="cashback-panel" id="cashbackPanel">
+      <div class="cashback-title">Что покажем?</div>
+
+      <div class="cashback-item active" data-cb="fastfood">
+        <div class="cashback-main">
+          <div class="cashback-percent">5% Фастфуд</div>
+          <div class="cashback-sub">Для молодёжи</div>
+        </div>
+        <div class="cashback-radio">
+          <div class="cashback-radio-inner"></div>
+        </div>
+      </div>
+
+      <div class="cashback-item" data-cb="sport">
+        <div class="cashback-main">
+          <div class="cashback-percent">5% Спортивные товары</div>
+        </div>
+        <div class="cashback-radio">
+          <div class="cashback-radio-inner"></div>
+        </div>
+      </div>
+
+      <div class="cashback-item" data-cb="active">
+        <div class="cashback-main">
+          <div class="cashback-percent">5% Активный отдых</div>
+        </div>
+        <div class="cashback-radio">
+          <div class="cashback-radio-inner"></div>
+        </div>
+      </div>
+
+      <div class="cashback-item">
+        <div class="cashback-main">
+          <div class="cashback-locked">Ещё одна категория будет доступна с Альфа-Смарт</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -477,6 +630,7 @@ let averageZones = [];
 
 let activeCategory = "all";
 let activeTab = "cashback";
+let activeCashbackCategory = "fastfood";
 
 let markersLayer = L.layerGroup();
 let heatLayer = L.layerGroup();
@@ -489,7 +643,7 @@ let guidePlaces = [];
 let currentStepIndex = 0;
 let heatMode = false;
 
-/* ========= MAP INIT (CARTO DARK MATTER) ========= */
+/* ========= MAP INIT (CARTO DARK) ========= */
 
 const map = L.map("map").setView([55.75, 37.62], 11);
 
@@ -498,7 +652,7 @@ L.tileLayer(
   {
     maxZoom: 19,
     attribution:
-      '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> & <a href="https://carto.com/attributions">CARTO</a>'
+      '&copy; OSM & CARTO'
   }
 ).addTo(map);
 
@@ -522,7 +676,6 @@ function haversine(a,b,c,d){
   const dLon=((d-b)*Math.PI)/180;
   const la=a*Math.PI/180;
   const lc=c*Math.PI/180;
-
   const h=Math.sin(dLat/2)**2 + Math.cos(la)*Math.cos(lc)*Math.sin(dLon/2)**2;
   return R * 2 * Math.atan2(Math.sqrt(h),Math.sqrt(1-h));
 }
@@ -535,15 +688,15 @@ function distFmt(km){
 /* ========= LOAD DATA ========= */
 
 async function loadData() {
-  const [pointsRes, brandsRes, zonesRes] = await Promise.all([
+  const [p, b, z] = await Promise.all([
     fetch("points.json"),
     fetch("brands.json"),
     fetch("average-zones.json")
   ]);
 
-  allPlaces = await pointsRes.json();
-  brandLogos = await brandsRes.json();
-  averageZones = await zonesRes.json();
+  allPlaces = await p.json();
+  brandLogos = await b.json();
+  averageZones = await z.json();
 
   initUI();
   buildHeatLayer();
@@ -555,12 +708,6 @@ loadData();
 
 /* ========= UI INIT ========= */
 
-const TABS = [
-  {key: "cashback", label: "Ваш кэшбэк"},
-  {key: "nearby", label: "Рядом с вами"},
-  {key: "categories", label: "Категории"}
-];
-
 const categoriesFilters = [
   {key:"all", label:"Все"},
   {key:"АЗС", label:"АЗС"},
@@ -570,13 +717,19 @@ const categoriesFilters = [
 ];
 
 function initUI() {
-  const tabsRow = document.querySelector(".tabs-row");
-  tabsRow.querySelectorAll(".tab").forEach(tab => {
+  // tabs
+  document.querySelectorAll(".tab").forEach(tab => {
     tab.onclick = () => {
-      activeTab = tab.getAttribute("data-tab");
-      tabsRow.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      const key = tab.getAttribute("data-tab");
+      activeTab = key;
+      document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
       tab.classList.add("active");
-      // На MVP вкладки визуальные, логика одна и та же
+
+      if (key === "categories") {
+        openCashbackPanel();
+      } else {
+        closeCashbackPanel();
+      }
     };
   });
 
@@ -599,6 +752,21 @@ function initUI() {
   document.querySelector("#detailClose").onclick = hideDetail;
 
   document.querySelector("#bannerRain").onclick = toggleHeatMode;
+
+  // cashback panel events
+  const backdrop = document.querySelector("#cashbackBackdrop");
+  backdrop.addEventListener("click", e => {
+    if (e.target === backdrop) closeCashbackPanel();
+  });
+
+  document.querySelectorAll(".cashback-item[data-cb]").forEach(item => {
+    item.onclick = () => {
+      document.querySelectorAll(".cashback-item[data-cb]").forEach(i=>i.classList.remove("active"));
+      item.classList.add("active");
+      activeCashbackCategory = item.getAttribute("data-cb");
+      // в MVP просто визуальное, можно позже добавить логику
+    };
+  });
 }
 
 function renderCategoryChips() {
@@ -622,7 +790,19 @@ function renderCategoryChips() {
   });
 }
 
-/* ========= MARKERS / HEAT ========= */
+/* ========= CASHBACK PANEL ========= */
+
+function openCashbackPanel() {
+  const bd = document.querySelector("#cashbackBackdrop");
+  bd.style.display = "flex";
+}
+
+function closeCashbackPanel() {
+  const bd = document.querySelector("#cashbackBackdrop");
+  bd.style.display = "none";
+}
+
+/* ========= FILTERED PLACES ========= */
 
 function filterPlacesBasic() {
   const q = document.querySelector("#searchInput").value.toLowerCase();
@@ -633,11 +813,12 @@ function filterPlacesBasic() {
   });
 }
 
+/* ========= MARKERS / HEAT ========= */
+
 function rebuildMarkers() {
   markersLayer.clearLayers();
   markerById.clear();
-
-  if (heatMode) return; // когда heatmap, точки скрываем
+  if (heatMode) return;
 
   const filtered = filterPlacesBasic();
   filtered.forEach(createMarker);
@@ -666,7 +847,6 @@ function createMarker(p) {
 
 function buildHeatLayer() {
   heatLayer.clearLayers();
-
   averageZones.forEach(z => {
     const color =
       z.value >= 35 ? "#ff3859" :
@@ -693,7 +873,7 @@ function toggleHeatMode() {
     document.querySelector("#guideTitle").textContent =
       "Средний кэшбэк по районам";
     document.querySelector("#guideSubtitle").textContent =
-      "Кликай по кругам на карте, чтобы посмотреть средний кэшбэк.";
+      "Нажмите на область, чтобы увидеть размер среднего кэшбэка.";
     document.querySelector("#placeName").textContent = "";
     document.querySelector("#placeAddress").textContent = "";
     document.querySelector("#placeCategory").textContent = "";
@@ -706,7 +886,7 @@ function toggleHeatMode() {
   }
 }
 
-/* ========= GUIDE ========= */
+/* ========= GUIDE (ТОЛЬКО РЕСТОРАНЫ) ========= */
 
 function buildGuide() {
   if (heatMode) return;
@@ -714,10 +894,13 @@ function buildGuide() {
   const baseLat = userPosition ? userPosition.lat : 55.75;
   const baseLon = userPosition ? userPosition.lon : 37.62;
 
-  const filtered = filterPlacesBasic().map(p => ({
-    ...p,
-    dist: haversine(baseLat,baseLon,p.lat,p.lon)
-  })).sort((a,b) => a.dist - b.dist);
+  const filtered = filterPlacesBasic()
+    .filter(p => p.category === "Рестораны и кафе") // только рестораны
+    .map(p => ({
+      ...p,
+      dist: haversine(baseLat,baseLon,p.lat,p.lon)
+    }))
+    .sort((a,b)=>a.dist-b.dist);
 
   guidePlaces = filtered.slice(0,5);
   currentStepIndex = 0;
@@ -748,9 +931,9 @@ function renderGuide() {
 
   const p = guidePlaces[currentStepIndex];
   if (!p) {
-    document.querySelector("#guideTitle").textContent = "Нет подходящих мест";
+    document.querySelector("#guideTitle").textContent = "Нет ресторанов поблизости";
     document.querySelector("#guideSubtitle").textContent =
-      "Попробуйте изменить фильтры или поиск.";
+      "Измените фильтры или попробуйте позже.";
     return;
   }
 
@@ -758,6 +941,13 @@ function renderGuide() {
     `Шаг ${currentStepIndex+1}. Посетите ${p.name}`;
   document.querySelector("#guideSubtitle").textContent =
     "Мы подобрали места с кэшбэком рядом с вами.";
+
+  // градиент по размеру кешбэка
+  const card = document.querySelector("#guidePlaceCard");
+  card.classList.remove("grad-low","grad-mid","grad-high");
+  if (p.cashback >= 6) card.classList.add("grad-high");
+  else if (p.cashback >= 4) card.classList.add("grad-mid");
+  else card.classList.add("grad-low");
 
   document.querySelector("#placeName").textContent = p.name;
   document.querySelector("#placeAddress").textContent = p.address;
