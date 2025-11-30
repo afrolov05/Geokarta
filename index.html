@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8" />
   <title>Geo Cashback MVP</title>
-
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- Leaflet -->
@@ -17,7 +16,9 @@
     :root {
       --bg-main: #05060a;
       --bg-card: #15161c;
+      --bg-card-soft: #1f2027;
       --bg-chip: #262730;
+      --bg-tab: #1f2027;
       --txt-main: #ffffff;
       --txt-soft: #c4c4d0;
       --txt-muted: #8f90a0;
@@ -37,7 +38,7 @@
     }
 
     body {
-      background: var(--bg-main);
+      background: #05060a;
       height: 100vh;
       overflow: hidden;
       display: flex;
@@ -50,7 +51,16 @@
       height: 100vh;
       position: relative;
       overflow: hidden;
-      background: var(--bg-main);
+      background: #05060a;
+    }
+
+    @media (min-width: 768px) {
+      .app-shell {
+        margin: 16px auto;
+        height: calc(100vh - 32px);
+        border-radius: 30px;
+        box-shadow: 0 18px 45px rgba(0,0,0,0.7);
+      }
     }
 
     #map {
@@ -59,46 +69,96 @@
       z-index: 1;
     }
 
-    /* ========== TOP PANEL ========== */
-    .top-panel {
+    /* ========= BOTTOM UI (как в фигме) ========= */
+
+    .bottom-panel {
       position: absolute;
-      top: 0;
-      width: 100%;
-      padding: 10px 12px 6px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 10px 12px 16px;
       z-index: 3;
-      background: linear-gradient(to bottom,
-        rgba(5, 6, 10, 0.9),
-        rgba(5, 6, 10, 0.6),
+      background: linear-gradient(
+        to top,
+        rgba(5, 6, 10, 0.98),
+        rgba(5, 6, 10, 0.7),
         transparent
       );
       pointer-events: none;
     }
 
-    .top-inner {
+    .bottom-inner {
       pointer-events: auto;
     }
 
-    .filters-row {
+    .tabs-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .tab {
+      flex: 1;
+      text-align: center;
+      background: var(--bg-tab);
+      color: var(--txt-soft);
+      padding: 8px 4px;
+      border-radius: 999px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .tab.active {
+      background: linear-gradient(145deg, #ff7b5f, #ff2140);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .search-row {
+      display: flex;
+      align-items: center;
+      background: #1c1d24;
+      padding: 8px 12px;
+      border-radius: 999px;
+      margin-bottom: 8px;
+    }
+
+    .search-row span {
+      margin-right: 6px;
+      opacity: 0.85;
+    }
+
+    .search-row input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #fff;
+      font-size: 13px;
+    }
+
+    .categories-row {
       display: flex;
       gap: 6px;
       overflow-x: auto;
       scrollbar-width: none;
       margin-bottom: 8px;
     }
-    .filters-row::-webkit-scrollbar { display: none; }
+
+    .categories-row::-webkit-scrollbar { display: none; }
 
     .chip {
-      background: var(--bg-chip);
-      padding: 7px 12px;
+      padding: 6px 10px;
       border-radius: 999px;
-      white-space: nowrap;
+      background: var(--bg-chip);
       color: var(--txt-soft);
-      font-size: 12px;
-      cursor: pointer;
-      border: 1px solid rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.1);
+      font-size: 11px;
+      white-space: nowrap;
       display: flex;
       align-items: center;
       gap: 6px;
+      cursor: pointer;
     }
 
     .chip.active {
@@ -112,62 +172,57 @@
       width: 6px;
       height: 6px;
       border-radius: 999px;
+      background: #fff3;
     }
 
-    .search-row {
+    .banner {
+      background: #46b6ff;
+      color: #05253c;
+      border-radius: 18px;
+      padding: 10px 12px;
+      font-size: 12px;
       display: flex;
-      background: #1c1d24;
-      padding: 8px 14px;
-      border-radius: 999px;
+      justify-content: space-between;
       align-items: center;
-      margin-bottom: 6px;
+      margin-bottom: 10px;
+      cursor: pointer;
     }
 
-    .search-row input {
-      flex: 1;
-      background: transparent;
-      border: none;
-      color: white;
-      font-size: 13px;
-      outline: none;
+    .banner-icon {
+      font-size: 18px;
+      margin-right: 6px;
     }
 
-    /* ========== BOTTOM PANEL (GUIDE) ========== */
-
-    .bottom-panel {
-      position: absolute;
-      bottom: 0;
-      width: 100%;
-      padding: 12px 14px 18px;
-      z-index: 3;
-      background: linear-gradient(
-        to top,
-        rgba(5, 6, 10, 0.95),
-        rgba(5, 6, 10, 0.6),
-        transparent
-      );
-      pointer-events: none;
+    .banner-title {
+      font-weight: 600;
+      margin-bottom: 2px;
     }
 
-    .card {
+    .banner-text {
+      opacity: 0.85;
+    }
+
+    .banner-arrow {
+      font-size: 16px;
+    }
+
+    .card-guide {
       background: var(--bg-card);
       border-radius: var(--radius-xl);
-      padding: 14px 18px;
-      pointer-events: auto;
+      padding: 12px 14px;
       border: 1px solid rgba(255,255,255,0.05);
     }
 
     .guide-steps {
       display: flex;
-      justify-content: space-between;
       align-items: center;
       gap: 6px;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     .step {
-      width: 28px;
-      height: 28px;
+      width: 26px;
+      height: 26px;
       border-radius: 999px;
       display: flex;
       justify-content: center;
@@ -181,42 +236,81 @@
 
     .step.active {
       background: linear-gradient(145deg, #ff7b5f, #ff2140);
-      color: white;
       border: none;
+      color: #fff;
       font-weight: 600;
     }
 
     .step-line {
       flex: 1;
       height: 1.5px;
-      background: rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.2);
     }
 
-    .guide-place-title {
-      font-size: 15px;
+    .guide-title {
+      font-size: 14px;
       font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .guide-subtitle {
+      font-size: 11px;
+      color: var(--txt-muted);
+      margin-bottom: 8px;
+    }
+
+    .guide-place-card {
+      background: var(--bg-card-soft);
+      border-radius: 18px;
+      padding: 10px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .guide-place-main {
+      font-size: 13px;
+    }
+
+    .guide-place-name {
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .guide-place-address {
+      font-size: 11px;
+      color: var(--txt-soft);
+    }
+
+    .guide-place-meta {
+      text-align: right;
+      font-size: 11px;
+      color: var(--txt-soft);
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #343542;
       margin-bottom: 4px;
     }
 
-    .guide-place-sub {
-      font-size: 12px;
-      color: var(--txt-muted);
-      margin-bottom: 10px;
-    }
-
-    /* ========== DETAIL CARD ========== */
+    /* DETAIL CARD (по тапу на маркер/гид) */
 
     .place-detail-wrapper {
       position: absolute;
+      left: 0;
+      right: 0;
       bottom: 0;
-      width: 100%;
-      padding: 0 14px 20px;
-      z-index: 999;
+      padding: 0 12px 18px;
+      z-index: 4;
       display: none;
       background: linear-gradient(
         to top,
-        rgba(5, 6, 10, 0.95),
-        rgba(5, 6, 10, 0.6),
+        rgba(5, 6, 10, 0.98),
+        rgba(5, 6, 10, 0.7),
         transparent
       );
       pointer-events: none;
@@ -225,12 +319,12 @@
     .place-detail {
       background: var(--bg-card);
       border-radius: var(--radius-xl);
-      padding: 18px;
+      padding: 16px;
+      border: 1px solid rgba(255,255,255,0.06);
       opacity: 0;
       transform: translateY(40px);
       transition: 0.28s ease;
       pointer-events: auto;
-      border: 1px solid rgba(255,255,255,0.05);
     }
 
     .place-detail.show {
@@ -240,56 +334,56 @@
 
     .detail-header {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      margin-bottom: 14px;
+      align-items: center;
+      margin-bottom: 10px;
     }
 
     .detail-logo {
-      width: 48px;
-      height: 48px;
-      background: #2a2b33;
+      width: 46px;
+      height: 46px;
       border-radius: 14px;
+      background: #2a2b33;
       object-fit: contain;
     }
 
     .detail-close {
-      font-size: 26px;
+      font-size: 24px;
       cursor: pointer;
-      opacity: 0.75;
+      opacity: 0.8;
     }
 
     .detail-title {
-      font-size: 18px;
+      font-size: 17px;
       font-weight: 600;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
 
     .detail-category {
       display: inline-block;
-      padding: 4px 12px;
+      padding: 4px 10px;
       border-radius: 999px;
-      font-size: 12px;
-      margin-bottom: 8px;
+      font-size: 11px;
+      margin-bottom: 6px;
       color: #fff;
     }
 
     .detail-row {
       font-size: 13px;
-      margin-bottom: 4px;
       color: var(--txt-soft);
+      margin-bottom: 4px;
     }
 
     /* Locate button */
     .btn-locate {
       position: absolute;
       right: 16px;
-      bottom: 230px;
+      bottom: 210px;
       width: 44px;
       height: 44px;
       border-radius: 999px;
       z-index: 3;
-      background: linear-gradient(145deg, #4bffe5, #1b1c24);
+      background: radial-gradient(circle at 30% 0, #4bffe5, #1b1c24);
       border: none;
       cursor: pointer;
       font-size: 18px;
@@ -302,28 +396,55 @@
 
   <div id="map"></div>
 
-  <!-- TOP PANEL -->
-  <div class="top-panel">
-    <div class="top-inner">
-
-      <div class="filters-row" id="filtersRow"></div>
-
-      <div class="search-row">
-        <span style="margin-right:6px;opacity:0.8">🔍</span>
-        <input id="searchInput" placeholder="Поиск">
-      </div>
-    </div>
-  </div>
-
   <button id="btnLocate" class="btn-locate">📍</button>
 
-  <!-- GUIDE -->
+  <!-- BOTTOM UI -->
   <div class="bottom-panel">
-    <div class="card">
-      <div class="guide-steps" id="guideSteps"></div>
+    <div class="bottom-inner">
 
-      <div class="guide-place-title" id="guidePlaceName"></div>
-      <div class="guide-place-sub" id="guidePlaceAddress"></div>
+      <div class="tabs-row">
+        <div class="tab active" data-tab="cashback">Ваш кэшбэк</div>
+        <div class="tab" data-tab="nearby">Рядом с вами</div>
+        <div class="tab" data-tab="categories">Категории</div>
+      </div>
+
+      <div class="search-row">
+        <span>🔍</span>
+        <input id="searchInput" placeholder="Поиск">
+      </div>
+
+      <div class="categories-row" id="categoriesRow"></div>
+
+      <div class="banner" id="bannerRain">
+        <div style="display:flex;align-items:flex-start;">
+          <div class="banner-icon">💧</div>
+          <div>
+            <div class="banner-title">Ожидаются осадки в виде кэшбэка</div>
+            <div class="banner-text">Нажмите, чтобы посмотреть средний кэшбэк по районам</div>
+          </div>
+        </div>
+        <div class="banner-arrow">›</div>
+      </div>
+
+      <div class="card-guide" id="guideCard">
+        <div class="guide-steps" id="guideSteps"></div>
+
+        <div class="guide-title" id="guideTitle"></div>
+        <div class="guide-subtitle" id="guideSubtitle"></div>
+
+        <div class="guide-place-card" id="guidePlaceCard">
+          <div class="guide-place-main">
+            <div class="guide-place-name" id="placeName"></div>
+            <div class="guide-place-address" id="placeAddress"></div>
+          </div>
+          <div class="guide-place-meta">
+            <div class="tag" id="placeCategory"></div>
+            <div id="placeDistance"></div>
+            <div id="placeAvgCheck"></div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -342,23 +463,23 @@
       <div class="detail-row" id="detailAddress"></div>
       <div class="detail-row">Средний чек: <span id="detailAvgCheck"></span></div>
       <div class="detail-row">Кэшбэк: <span id="detailCashback"></span>%</div>
-
     </div>
   </div>
 
 </div>
 
 <script>
-/* ===========================
-   GLOBAL STATE
-=========================== */
+/* ========= GLOBAL STATE ========= */
 
 let allPlaces = [];
 let brandLogos = {};
 let averageZones = [];
 
 let activeCategory = "all";
+let activeTab = "cashback";
+
 let markersLayer = L.layerGroup();
+let heatLayer = L.layerGroup();
 let markerById = new Map();
 
 let userPosition = null;
@@ -366,44 +487,24 @@ let userMarker = null;
 
 let guidePlaces = [];
 let currentStepIndex = 0;
+let heatMode = false;
 
-/* ===========================
-   INIT: LOAD DATA
-=========================== */
-
-async function loadData() {
-  const [p, b, z] = await Promise.all([
-    fetch("points.json").then(r => r.json()),
-    fetch("brands.json").then(r => r.json()),
-    fetch("average-zones.json").then(r => r.json())
-  ]);
-
-  allPlaces = p;
-  brandLogos = b;
-  averageZones = z;
-
-  initUI();
-  rebuildMarkers();
-  buildGuide();
-}
-
-loadData();
-
-/* ===========================
-   MAP INIT
-=========================== */
+/* ========= MAP INIT (CARTO DARK MATTER) ========= */
 
 const map = L.map("map").setView([55.75, 37.62], 11);
 
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  maxZoom: 19
-}).addTo(map);
+L.tileLayer(
+  "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+  {
+    maxZoom: 19,
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> & <a href="https://carto.com/attributions">CARTO</a>'
+  }
+).addTo(map);
 
 markersLayer.addTo(map);
 
-/* ===========================
-   HELPERS
-=========================== */
+/* ========= HELPERS ========= */
 
 function catColor(c) {
   switch (c) {
@@ -411,7 +512,7 @@ function catColor(c) {
     case "Рестораны и кафе": return "#ff9f30";
     case "Спорттовары": return "#29d9a6";
     case "Развлечения": return "#7c5cff";
-    default: return "#fff";
+    default: return "#ffffff";
   }
 }
 
@@ -431,75 +532,114 @@ function distFmt(km){
   return km.toFixed(1)+" км";
 }
 
-/* ===========================
-   UI INIT
-=========================== */
+/* ========= LOAD DATA ========= */
 
-const filters = [
-  {key:"all", name:"Все"},
-  {key:"АЗС", name:"АЗС"},
-  {key:"Рестораны и кафе", name:"Рестораны"},
-  {key:"Спорттовары", name:"Спорт"},
-  {key:"Развлечения", name:"Развлечения"}
+async function loadData() {
+  const [pointsRes, brandsRes, zonesRes] = await Promise.all([
+    fetch("points.json"),
+    fetch("brands.json"),
+    fetch("average-zones.json")
+  ]);
+
+  allPlaces = await pointsRes.json();
+  brandLogos = await brandsRes.json();
+  averageZones = await zonesRes.json();
+
+  initUI();
+  buildHeatLayer();
+  rebuildMarkers();
+  buildGuide();
+}
+
+loadData();
+
+/* ========= UI INIT ========= */
+
+const TABS = [
+  {key: "cashback", label: "Ваш кэшбэк"},
+  {key: "nearby", label: "Рядом с вами"},
+  {key: "categories", label: "Категории"}
+];
+
+const categoriesFilters = [
+  {key:"all", label:"Все"},
+  {key:"АЗС", label:"АЗС"},
+  {key:"Рестораны и кафе", label:"Рестораны"},
+  {key:"Спорттовары", label:"Спорт"},
+  {key:"Развлечения", label:"Развлечения"}
 ];
 
 function initUI() {
+  const tabsRow = document.querySelector(".tabs-row");
+  tabsRow.querySelectorAll(".tab").forEach(tab => {
+    tab.onclick = () => {
+      activeTab = tab.getAttribute("data-tab");
+      tabsRow.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+      // На MVP вкладки визуальные, логика одна и та же
+    };
+  });
 
-  renderFilters();
+  renderCategoryChips();
 
-  document.querySelector("#searchInput")
-    .addEventListener("input", () => {
-      rebuildMarkers();
-      buildGuide();
-    });
+  document.querySelector("#searchInput").addEventListener("input", () => {
+    rebuildMarkers();
+    buildGuide();
+  });
 
   document.querySelector("#btnLocate").onclick = () => locate();
 
+  document.querySelector("#guidePlaceCard").onclick = () => {
+    const p = guidePlaces[currentStepIndex];
+    if (!p) return;
+    showDetail(p);
+    map.flyTo([p.lat,p.lon],15,{duration:0.5});
+  };
+
   document.querySelector("#detailClose").onclick = hideDetail;
+
+  document.querySelector("#bannerRain").onclick = toggleHeatMode;
 }
 
-function renderFilters() {
-  const row = document.querySelector("#filtersRow");
+function renderCategoryChips() {
+  const row = document.querySelector("#categoriesRow");
   row.innerHTML = "";
-
-  filters.forEach(f => {
+  categoriesFilters.forEach(cf => {
     const chip = document.createElement("div");
-    chip.className = "chip" + (activeCategory === f.key ? " active" : "");
-
+    chip.className = "chip" + (activeCategory === cf.key ? " active" : "");
     const dot = document.createElement("div");
     dot.className = "chip-dot";
-    dot.style.background = catColor(f.key);
-
+    dot.style.background = cf.key === "all" ? "#fff3" : catColor(cf.key);
     chip.appendChild(dot);
-    chip.appendChild(document.createTextNode(f.name));
-
+    chip.appendChild(document.createTextNode(cf.label));
     chip.onclick = () => {
-      activeCategory = f.key;
-      renderFilters();
+      activeCategory = cf.key;
+      renderCategoryChips();
       rebuildMarkers();
       buildGuide();
     };
-
     row.appendChild(chip);
   });
 }
 
-/* ===========================
-   MARKERS
-=========================== */
+/* ========= MARKERS / HEAT ========= */
+
+function filterPlacesBasic() {
+  const q = document.querySelector("#searchInput").value.toLowerCase();
+  return allPlaces.filter(p => {
+    const okCat = activeCategory === "all" || p.category === activeCategory;
+    const okQ = !q || p.name.toLowerCase().includes(q);
+    return okCat && okQ;
+  });
+}
 
 function rebuildMarkers() {
   markersLayer.clearLayers();
   markerById.clear();
 
-  const q = document.querySelector("#searchInput").value.toLowerCase();
+  if (heatMode) return; // когда heatmap, точки скрываем
 
-  const filtered = allPlaces.filter(p => {
-    const okCat = activeCategory === "all" || p.category === activeCategory;
-    const okQ = !q || p.name.toLowerCase().includes(q);
-    return okCat && okQ;
-  });
-
+  const filtered = filterPlacesBasic();
   filtered.forEach(createMarker);
 }
 
@@ -508,53 +648,83 @@ function createMarker(p) {
     html: `<div style="
       width:14px;height:14px;border-radius:999px;
       background:${catColor(p.category)};
-      border:2px solid #05060a
+      border:2px solid #05060a;
     "></div>`,
-    className: "",
-    iconSize: [16,16],
-    iconAnchor: [8,8]
+    className:"",
+    iconSize:[16,16],
+    iconAnchor:[8,8]
   });
 
-  const m = L.marker([p.lat, p.lon], { icon }).addTo(markersLayer);
-
+  const m = L.marker([p.lat,p.lon],{icon}).addTo(markersLayer);
   markerById.set(p.id, m);
 
   m.on("click", () => {
     showDetail(p);
-    map.flyTo([p.lat, p.lon], 15, {duration: 0.5});
+    map.flyTo([p.lat,p.lon],15,{duration:0.5});
   });
 }
 
-/* ===========================
-   GUIDE LOGIC
-=========================== */
+function buildHeatLayer() {
+  heatLayer.clearLayers();
+
+  averageZones.forEach(z => {
+    const color =
+      z.value >= 35 ? "#ff3859" :
+      z.value >= 25 ? "#ff9f30" : "#29d9a6";
+
+    const circle = L.circle([z.lat,z.lon],{
+      radius: 400 + z.value * 6,
+      color,
+      fillColor: color,
+      fillOpacity: 0.18,
+      weight: 1.2
+    }).addTo(heatLayer);
+
+    circle.bindPopup(`Средний кэшбэк: ${z.value} ₽`);
+  });
+}
+
+function toggleHeatMode() {
+  heatMode = !heatMode;
+
+  if (heatMode) {
+    map.addLayer(heatLayer);
+    markersLayer.clearLayers();
+    document.querySelector("#guideTitle").textContent =
+      "Средний кэшбэк по районам";
+    document.querySelector("#guideSubtitle").textContent =
+      "Кликай по кругам на карте, чтобы посмотреть средний кэшбэк.";
+    document.querySelector("#placeName").textContent = "";
+    document.querySelector("#placeAddress").textContent = "";
+    document.querySelector("#placeCategory").textContent = "";
+    document.querySelector("#placeDistance").textContent = "";
+    document.querySelector("#placeAvgCheck").textContent = "";
+  } else {
+    map.removeLayer(heatLayer);
+    rebuildMarkers();
+    buildGuide();
+  }
+}
+
+/* ========= GUIDE ========= */
 
 function buildGuide() {
+  if (heatMode) return;
 
   const baseLat = userPosition ? userPosition.lat : 55.75;
   const baseLon = userPosition ? userPosition.lon : 37.62;
 
-  const q = document.querySelector("#searchInput").value.toLowerCase();
-
-  const filtered = allPlaces.filter(p => {
-    const okCat = activeCategory === "all" || p.category === activeCategory;
-    const okQ = !q || p.name.toLowerCase().includes(q);
-    return okCat && okQ;
-  });
-
-  const sorted = filtered.map(p => ({
+  const filtered = filterPlacesBasic().map(p => ({
     ...p,
     dist: haversine(baseLat,baseLon,p.lat,p.lon)
   })).sort((a,b) => a.dist - b.dist);
 
-  guidePlaces = sorted.slice(0,5);
+  guidePlaces = filtered.slice(0,5);
   currentStepIndex = 0;
-
   renderGuide();
 }
 
 function renderGuide() {
-
   const steps = document.querySelector("#guideSteps");
   steps.innerHTML = "";
 
@@ -565,12 +735,11 @@ function renderGuide() {
     s.onclick = () => {
       currentStepIndex = i;
       renderGuide();
-      showDetail(p);
       map.flyTo([p.lat,p.lon],15,{duration:0.5});
+      showDetail(p);
     };
     steps.appendChild(s);
-
-    if(i < guidePlaces.length - 1){
+    if (i < guidePlaces.length - 1) {
       const line = document.createElement("div");
       line.className = "step-line";
       steps.appendChild(line);
@@ -578,27 +747,37 @@ function renderGuide() {
   });
 
   const p = guidePlaces[currentStepIndex];
-  if(!p) return;
+  if (!p) {
+    document.querySelector("#guideTitle").textContent = "Нет подходящих мест";
+    document.querySelector("#guideSubtitle").textContent =
+      "Попробуйте изменить фильтры или поиск.";
+    return;
+  }
 
-  document.querySelector("#guidePlaceName").textContent = p.name;
-  document.querySelector("#guidePlaceAddress").textContent = p.address;
+  document.querySelector("#guideTitle").textContent =
+    `Шаг ${currentStepIndex+1}. Посетите ${p.name}`;
+  document.querySelector("#guideSubtitle").textContent =
+    "Мы подобрали места с кэшбэком рядом с вами.";
+
+  document.querySelector("#placeName").textContent = p.name;
+  document.querySelector("#placeAddress").textContent = p.address;
+  document.querySelector("#placeCategory").textContent = p.category;
+  document.querySelector("#placeDistance").textContent = distFmt(p.dist);
+  document.querySelector("#placeAvgCheck").textContent = `~${p.avgCheck} ₽`;
 }
 
-/* ===========================
-   DETAIL CARD
-=========================== */
+/* ========= DETAIL CARD ========= */
 
-function showDetail(p){
+function showDetail(p) {
   const wrap = document.querySelector("#placeDetailWrap");
   const card = document.querySelector("#placeDetail");
 
-  const logo = brandLogos[p.brand] || "logos/default.png";
-  document.querySelector("#detailLogo").src = logo;
+  const logoPath = brandLogos[p.brand] || "logos/default.png";
 
+  document.querySelector("#detailLogo").src = logoPath;
   document.querySelector("#detailTitle").textContent = p.name;
   document.querySelector("#detailCategory").textContent = p.category;
   document.querySelector("#detailCategory").style.background = catColor(p.category);
-
   document.querySelector("#detailAddress").textContent = p.address;
   document.querySelector("#detailAvgCheck").textContent = p.avgCheck + " ₽";
   document.querySelector("#detailCashback").textContent = p.cashback;
@@ -610,41 +789,32 @@ function showDetail(p){
 function hideDetail() {
   const wrap = document.querySelector("#placeDetailWrap");
   const card = document.querySelector("#placeDetail");
-
   card.classList.remove("show");
   setTimeout(() => wrap.style.display = "none", 200);
 }
 
-/* ===========================
-   USER LOCATION
-=========================== */
+/* ========= GEOLOCATION ========= */
 
 function locate() {
-  if(!navigator.geolocation) return;
-
+  if (!navigator.geolocation) return;
   navigator.geolocation.getCurrentPosition(pos => {
     userPosition = {
       lat: pos.coords.latitude,
       lon: pos.coords.longitude
     };
-
-    if(!userMarker){
-      userMarker = L.circleMarker([userPosition.lat, userPosition.lon], {
+    if (!userMarker) {
+      userMarker = L.circleMarker([userPosition.lat,userPosition.lon],{
         radius: 6,
         color: "#00ffb3",
         fillOpacity: 0.9
       }).addTo(map);
     } else {
-      userMarker.setLatLng([userPosition.lat, userPosition.lon]);
+      userMarker.setLatLng([userPosition.lat,userPosition.lon]);
     }
-
-    map.setView([userPosition.lat, userPosition.lon], 14);
-
+    map.setView([userPosition.lat,userPosition.lon], 13);
     buildGuide();
   });
 }
-
 </script>
 </body>
 </html>
-
