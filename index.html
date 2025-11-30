@@ -15,14 +15,16 @@
   <style>
     :root {
       --bg-main: #050509;
-      --bg-card: #141418;
-      --bg-chip: #1c1c21;
-      --accent: #e11d48;
-      --accent-soft: rgba(225, 29, 72, 0.16);
+      --bg-surface: #101015;
+      --bg-card: #17171f;
+      --bg-chip: #1f1f27;
+      --accent: #ff365c;
+      --accent-soft: rgba(255, 54, 92, 0.18);
       --text-main: #f9fafb;
       --text-muted: #9ca3af;
-      --border-subtle: rgba(255, 255, 255, 0.06);
-      --radius-lg: 20px;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --radius-xl: 22px;
+      --radius-lg: 18px;
       --radius-md: 14px;
     }
 
@@ -32,7 +34,6 @@
 
     body {
       margin: 0;
-      padding: 0;
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui,
         sans-serif;
       background: var(--bg-main);
@@ -45,6 +46,7 @@
       width: 100vw;
       height: 100vh;
       overflow: hidden;
+      background: #000;
     }
 
     /* MAP */
@@ -54,151 +56,178 @@
       z-index: 1;
     }
 
-    /* TOP OVERLAY */
-    .top-panel {
+    /* TOP BUTTONS (назад / закрыть) – просто заглушки */
+    .top-buttons {
       position: absolute;
-      top: env(safe-area-inset-top, 12px);
+      top: env(safe-area-inset-top, 10px);
       left: 0;
       right: 0;
-      padding: 12px 16px 8px;
-      z-index: 10;
+      padding: 8px 16px;
+      display: flex;
+      justify-content: space-between;
+      z-index: 20;
       pointer-events: none;
     }
 
-    .top-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-
-    .back-btn {
+    .circle-btn {
+      pointer-events: auto;
       width: 32px;
       height: 32px;
       border-radius: 999px;
       border: 1px solid var(--border-subtle);
-      background: rgba(5, 5, 9, 0.82);
+      background: rgba(5, 5, 10, 0.88);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 18px;
+      color: var(--text-main);
+      font-size: 16px;
       cursor: pointer;
-      pointer-events: auto;
+    }
+
+    .circle-btn.hidden {
       visibility: hidden;
     }
 
-    .back-btn.visible {
-      visibility: visible;
+    /* MAIN PANEL (как на главном экране) */
+    .main-panel {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 10;
+      padding: 10px 0 12px;
+      pointer-events: none;
     }
 
-    .title-chip {
+    .main-inner {
       pointer-events: auto;
-      padding: 6px 12px;
-      border-radius: 999px;
-      background: rgba(5, 5, 9, 0.8);
+      margin: 0 8px env(safe-area-inset-bottom, 8px);
+      padding: 10px 10px 12px;
+      border-radius: 24px 24px 0 0;
+      background: radial-gradient(
+          circle at 10% 0,
+          rgba(255, 255, 255, 0.05),
+          transparent 45%
+        ),
+        rgba(7, 7, 12, 0.98);
       border: 1px solid var(--border-subtle);
-      font-size: 13px;
-      color: var(--text-muted);
-      display: inline-flex;
+      box-shadow: 0 -18px 40px rgba(0, 0, 0, 0.65);
+      max-width: 420px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .panel-grabber {
+      width: 44px;
+      height: 4px;
+      margin: 0 auto 10px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.5);
+    }
+
+    /* SEARCH */
+    .search-bar {
+      display: flex;
       align-items: center;
+      padding: 10px 12px;
+      border-radius: 999px;
+      background: #15151c;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      font-size: 14px;
+      gap: 8px;
+    }
+
+    .search-bar input {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: var(--text-main);
+      font-size: 14px;
+    }
+
+    /* TABS: Ваш кэшбэк / Рядом с вами */
+    .tabs-row {
+      display: flex;
+      margin-top: 10px;
       gap: 6px;
     }
 
-    .title-chip span.label {
-      color: var(--text-main);
+    .tab-pill {
+      flex: 1;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border-subtle);
+      background: #16161d;
+      font-size: 13px;
+      text-align: center;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .tab-pill.active {
+      background: linear-gradient(90deg, #ff365c, #ff8845);
+      color: #fff;
+      border-color: transparent;
+    }
+
+    /* BLUE BANNER "Осадки" */
+    .osadki-banner {
+      margin-top: 10px;
+      border-radius: var(--radius-lg);
+      background: #0ea5e9;
+      color: #0b1120;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+
+    .osadki-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
       font-weight: 500;
     }
 
-    .osadki-btn {
-      pointer-events: auto;
-      padding: 6px 12px;
+    .osadki-icon {
+      width: 28px;
+      height: 28px;
       border-radius: 999px;
-      background: var(--bg-chip);
-      border: 1px solid var(--border-subtle);
-      font-size: 13px;
-      display: inline-flex;
+      background: rgba(255, 255, 255, 0.25);
+      display: flex;
       align-items: center;
-      gap: 6px;
-      cursor: pointer;
-      color: var(--text-main);
+      justify-content: center;
+      font-size: 17px;
     }
 
-    .osadki-btn span.drop {
+    .osadki-sub {
+      font-size: 11px;
+      margin-top: 2px;
+      opacity: 0.85;
+    }
+
+    .osadki-arrow {
       font-size: 16px;
     }
 
-    /* CASHBACK CARD + GUIDE */
-    .top-cards {
-      pointer-events: auto;
-      margin-top: 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .cashback-card {
-      background: radial-gradient(
-          circle at 0 0,
-          rgba(225, 29, 72, 0.18),
-          transparent 60%
-        ),
-        var(--bg-card);
-      border-radius: var(--radius-lg);
-      padding: 10px 12px;
-      border: 1px solid var(--border-subtle);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .cashback-left {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .cashback-title {
-      font-size: 13px;
-      color: var(--text-muted);
-    }
-
-    .cashback-value {
-      font-size: 18px;
-      font-weight: 600;
-    }
-
-    .cashback-tag {
-      margin-top: 2px;
-      font-size: 11px;
-      padding: 2px 8px;
-      border-radius: 999px;
-      background: var(--accent-soft);
-      color: var(--accent);
-      align-self: flex-start;
-    }
-
-    .cashback-right {
-      text-align: right;
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-
+    /* GUIDE (Гид по району) */
     .guide-card {
-      background: rgba(10, 10, 15, 0.92);
+      margin-top: 10px;
       border-radius: var(--radius-lg);
-      padding: 10px 12px;
+      background: #14141b;
       border: 1px solid var(--border-subtle);
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
+      padding: 10px 12px 12px;
     }
 
     .guide-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      margin-bottom: 8px;
     }
 
     .guide-title {
@@ -206,144 +235,177 @@
       font-weight: 500;
     }
 
-    .guide-sub {
+    .guide-steps {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .guide-step-bubble {
+      width: 30px;
+      height: 30px;
+      border-radius: 999px;
+      background: #27272f;
+      color: #9ca3af;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+    }
+
+    .guide-step-bubble.active {
+      background: #f9fafb;
+      color: #111827;
+      font-weight: 600;
+    }
+
+    .guide-body {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .guide-main-text {
+      max-width: 70%;
+    }
+
+    .guide-subtitle {
       font-size: 11px;
       color: var(--text-muted);
+      margin-top: 2px;
     }
 
     .guide-next-btn {
-      width: 26px;
-      height: 26px;
+      width: 30px;
+      height: 30px;
       border-radius: 999px;
       border: 1px solid var(--border-subtle);
       background: var(--bg-chip);
       display: flex;
       align-items: center;
       justify-content: center;
+      font-size: 17px;
       cursor: pointer;
-      font-size: 16px;
     }
 
-    .guide-main {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      margin-top: 4px;
+    /* CASHBACK SHEET (Ваш кэшбэк) */
+    .cashback-sheet {
+      margin-top: 10px;
+      border-radius: var(--radius-lg);
+      background: #111827;
+      border: 1px solid var(--border-subtle);
+      padding: 8px 10px 10px;
+      display: none;
     }
 
-    .guide-venue-name {
+    .cashback-sheet.visible {
+      display: block;
+    }
+
+    .sheet-title {
       font-size: 13px;
       font-weight: 500;
+      margin-bottom: 4px;
     }
 
-    .guide-venue-meta {
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-
-    .guide-progress-wrapper {
+    .cashback-option {
       margin-top: 4px;
-      width: 100%;
-      height: 4px;
-      border-radius: 999px;
-      background: #1f2933;
-      overflow: hidden;
-    }
-
-    .guide-progress-bar {
-      height: 100%;
-      width: 0;
-      background: linear-gradient(90deg, #22c55e, #eab308);
-      transition: width 0.25s ease-out;
-    }
-
-    /* CASHBACK CATEGORY CHIPS */
-    .cashback-categories {
-      pointer-events: auto;
-      margin-top: 8px;
+      padding: 8px 6px;
+      border-radius: 12px;
       display: flex;
-      gap: 6px;
-      overflow-x: auto;
-      padding-bottom: 4px;
-    }
-
-    .cb-chip {
-      flex-shrink: 0;
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: var(--bg-chip);
-      border: 1px solid var(--border-subtle);
-      font-size: 12px;
-      color: var(--text-muted);
-      cursor: pointer;
-      display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 10px;
+      cursor: pointer;
     }
 
-    .cb-chip.active {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: white;
+    .cashback-option:hover {
+      background: #020617;
     }
 
-    .cb-chip span.pct {
-      font-size: 11px;
-      opacity: 0.9;
+    .option-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      background: #0f172a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
     }
 
-    /* BOTTOM SHEET: LIST NEAR YOU */
-    .bottom-sheet {
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      z-index: 9;
-      padding: 8px 0 12px;
-      pointer-events: none;
-    }
-
-    .bottom-inner {
-      pointer-events: auto;
-      margin: 0 12px env(safe-area-inset-bottom, 8px);
-      background: rgba(10, 10, 15, 0.96);
-      border-radius: 18px 18px 0 0;
-      border: 1px solid var(--border-subtle);
-      max-height: 44vh;
+    .option-text {
+      flex: 1;
       display: flex;
       flex-direction: column;
-      overflow: hidden;
+      gap: 2px;
     }
 
-    .bottom-header {
-      padding: 8px 12px 4px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .bottom-title {
+    .option-title {
       font-size: 13px;
-      font-weight: 500;
     }
 
-    .bottom-sub {
+    .option-sub {
       font-size: 11px;
       color: var(--text-muted);
     }
 
-    .bottom-list {
-      padding: 4px 4px 8px;
-      overflow-y: auto;
+    .option-radio {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      border: 2px solid #6b7280;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    .place-card {
-      border-radius: 14px;
+    .option-radio-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: transparent;
+    }
+
+    .cashback-option.active .option-radio {
+      border-color: var(--accent);
+    }
+
+    .cashback-option.active .option-radio-dot {
+      background: var(--accent);
+    }
+
+    .sheet-lock {
+      margin-top: 6px;
+      font-size: 11px;
+      color: #9ca3af;
+      opacity: 0.8;
+      padding: 6px 8px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.8);
+      text-align: center;
+    }
+
+    /* LIST NEAR YOU */
+    .near-header {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .near-list {
+      margin-top: 6px;
+      max-height: 160px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .near-card {
+      border-radius: 16px;
       padding: 8px 10px;
-      margin: 4px 4px;
-      background: #111827;
-      border: 1px solid rgba(148, 163, 184, 0.3);
+      margin-bottom: 6px;
+      color: #f9fafb;
       font-size: 12px;
       display: flex;
       flex-direction: column;
@@ -351,474 +413,606 @@
       cursor: pointer;
     }
 
-    .place-name {
+    .near-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       font-size: 13px;
       font-weight: 500;
     }
 
-    .place-meta {
-      font-size: 11px;
-      color: var(--text-muted);
+    .near-brand {
+      font-size: 10px;
+      opacity: 0.9;
     }
 
-    .place-row {
+    .near-meta {
       display: flex;
       justify-content: space-between;
+      font-size: 11px;
       margin-top: 2px;
     }
 
-    .place-cb {
-      font-size: 11px;
-      color: #4ade80;
+    .near-distance {
+      opacity: 0.9;
     }
 
-    .place-check {
-      font-size: 11px;
-      color: #e5e7eb;
+    .near-check {
+      opacity: 0.9;
     }
 
-    /* HEATMODE OVERLAY (ОСАДКИ) */
-    .heatmode-active .cashback-card,
-    .heatmode-active .guide-card,
-    .heatmode-active .cashback-categories,
-    .heatmode-active .bottom-sheet {
+    /* COLOR THEMES FOR NEAR CARDS */
+    .near-fastfood {
+      background: linear-gradient(90deg, #3b7c26, #16a34a);
+    }
+    .near-sport {
+      background: linear-gradient(90deg, #0f766e, #22c55e);
+    }
+    .near-entertainment {
+      background: linear-gradient(90deg, #b91c1c, #f97316);
+    }
+    .near-active {
+      background: linear-gradient(90deg, #4b5563, #9ca3af);
+    }
+
+    /* HEATMAP SCREEN */
+    .heat-overlay {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 15;
+      padding: 10px 0 14px;
       display: none;
+      pointer-events: none;
     }
 
-    .heat-banner {
-      display: none;
-      margin-top: 8px;
-      pointer-events: auto;
-      padding: 10px 12px;
-      border-radius: var(--radius-lg);
-      background: rgba(10, 10, 15, 0.92);
-      border: 1px solid var(--border-subtle);
-      font-size: 12px;
-      color: var(--text-muted);
-    }
-
-    .heatmode-active .heat-banner {
+    .heat-overlay.visible {
       display: block;
     }
 
+    .heat-inner {
+      pointer-events: auto;
+      margin: 0 8px env(safe-area-inset-bottom, 10px);
+      padding: 12px 12px 14px;
+      border-radius: 22px;
+      background: rgba(7, 7, 12, 0.98);
+      border: 1px solid var(--border-subtle);
+      max-width: 420px;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: center;
+    }
+
     .heat-title {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .heat-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .heat-card {
+      margin-top: 10px;
+      border-radius: var(--radius-lg);
+      background: #111827;
+      border: 1px solid var(--border-subtle);
+      padding: 10px 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .heat-card-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 30%, #f97316, #ef4444);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .heat-card-text {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: left;
+    }
+
+    .heat-card-title {
       font-size: 13px;
       font-weight: 500;
       color: var(--text-main);
-      margin-bottom: 4px;
+      margin-bottom: 2px;
     }
 
     @media (min-width: 768px) {
-      .top-panel {
+      .main-inner,
+      .heat-inner {
         max-width: 420px;
-        margin: 0 auto;
-      }
-      .bottom-inner {
-        max-width: 420px;
-        margin-left: auto;
-        margin-right: auto;
       }
     }
   </style>
 </head>
 <body>
-  <div id="app">
-    <div id="map"></div>
+<div id="app">
+  <div id="map"></div>
 
-    <!-- TOP OVERLAY -->
-    <div class="top-panel">
-      <div class="top-row">
-        <button id="backBtn" class="back-btn" aria-label="Назад">←</button>
+  <!-- Top buttons (back from “осадки”) -->
+  <div class="top-buttons">
+    <button id="btnBack" class="circle-btn hidden" aria-label="Назад">←</button>
+    <button class="circle-btn" aria-label="Закрыть">✕</button>
+  </div>
 
-        <div class="title-chip">
-          <span class="label" id="titleLabel">Ваш кэшбэк</span>
-        </div>
+  <!-- MAIN PANEL -->
+  <div class="main-panel" id="mainPanel">
+    <div class="main-inner">
+      <div class="panel-grabber"></div>
 
-        <button id="osadkiBtn" class="osadki-btn">
-          <span class="drop">💧</span>
-          <span>Осадки</span>
-        </button>
+      <!-- Search -->
+      <div class="search-bar">
+        <span>🔍</span>
+        <input id="searchInput" type="text" placeholder="Поиск" />
       </div>
 
-      <div class="top-cards">
-        <!-- Кэшбэк карточка -->
-        <div class="cashback-card">
-          <div class="cashback-left">
-            <div class="cashback-title">Кэшбэк по выбранной категории</div>
-            <div class="cashback-value" id="cbValue">до 7%</div>
-            <div class="cashback-tag" id="cbTag">АЗС, рестораны, спорт, развлечения</div>
-          </div>
-          <div class="cashback-right">
-            <div>Выберите категорию,</div>
-            <div>чтобы увидеть заведения</div>
-          </div>
-        </div>
+      <!-- Tabs -->
+      <div class="tabs-row">
+        <div id="tabCashback" class="tab-pill active">Ваш кэшбэк</div>
+        <div id="tabNear" class="tab-pill">Рядом с вами</div>
+      </div>
 
-        <!-- Гид по району -->
-        <div class="guide-card" id="guideCard">
-          <div class="guide-header">
-            <div>
-              <div class="guide-title">Гид по району</div>
-              <div class="guide-sub">Рекомендуем рестораны неподалёку</div>
-            </div>
-            <button class="guide-next-btn" id="guideNextBtn" aria-label="Следующее место">✓</button>
-          </div>
-          <div class="guide-main">
-            <div>
-              <div class="guide-venue-name" id="guideVenueName">—</div>
-              <div class="guide-venue-meta" id="guideVenueMeta">—</div>
-            </div>
-            <div style="text-align:right; font-size:11px; color:var(--text-muted);">
-              <div id="guideVenueCheck">Средний чек: — ₽</div>
-              <div id="guideVenueCb">Кэшбэк: —%</div>
-            </div>
-          </div>
-          <div class="guide-progress-wrapper">
-            <div class="guide-progress-bar" id="guideProgressBar"></div>
-          </div>
-        </div>
-
-        <!-- Осадки инфо (heatmode) -->
-        <div class="heat-banner" id="heatBanner">
-          <div class="heat-title">Осадки кэшбэка</div>
+      <!-- Осадки -->
+      <div class="osadki-banner" id="osadkiBanner">
+        <div class="osadki-left">
+          <div class="osadki-icon">💧</div>
           <div>
-            На карте показаны районы Москвы с разной средней ставкой кэшбэка. Нажмите «←», чтобы вернуться к конкретным заведениям.
+            Ожидаются осадки в виде кэшбэка
+            <div class="osadki-sub">
+              Нажмите, чтобы посмотреть средний кэшбэк по районам
+            </div>
+          </div>
+        </div>
+        <div class="osadki-arrow">›</div>
+      </div>
+
+      <!-- Гид по району -->
+      <div class="guide-card" id="guideCard">
+        <div class="guide-header">
+          <div class="guide-title">Гид по району ›</div>
+        </div>
+        <div class="guide-steps" id="guideSteps">
+          <!-- 5 кружков -->
+        </div>
+        <div class="guide-body">
+          <div class="guide-main-text">
+            <div id="guideTitle">Посетите выбранный ресторан</div>
+            <div id="guideSub" class="guide-subtitle">
+              Мы подобрали места с кэшбэком рядом с вами.
+            </div>
+          </div>
+          <button id="guideNextBtn" class="guide-next-btn" title="Следующий шаг">✓</button>
+        </div>
+      </div>
+
+      <!-- Лист кэшбэка (показывается только в табе "Ваш кэшбэк") -->
+      <div class="cashback-sheet" id="cashbackSheet">
+        <div class="sheet-title">Что покажем?</div>
+
+        <div class="cashback-option" data-cb="fastfood">
+          <div class="option-icon">🍔</div>
+          <div class="option-text">
+            <div class="option-title">5% Фастфуд</div>
+            <div class="option-sub">Для молодежи</div>
+          </div>
+          <div class="option-radio">
+            <div class="option-radio-dot"></div>
           </div>
         </div>
 
-        <!-- Категории кэшбэка -->
-        <div class="cashback-categories" id="cbCategories">
-          <div class="cb-chip active" data-cat="all">
-            Все <span class="pct">• все категории</span>
+        <div class="cashback-option" data-cb="sport">
+          <div class="option-icon">🏅</div>
+          <div class="option-text">
+            <div class="option-title">5% Спортивные товары</div>
+            <div class="option-sub">Спорт — это жизнь</div>
           </div>
-          <div class="cb-chip" data-cat="active">
-            АЗС <span class="pct">до 7%</span>
-          </div>
-          <div class="cb-chip" data-cat="fastfood">
-            Еда <span class="pct">до 5%</span>
-          </div>
-          <div class="cb-chip" data-cat="sport">
-            Спорт <span class="pct">до 5%</span>
-          </div>
-          <div class="cb-chip" data-cat="entertainment">
-            Развлечения <span class="pct">до 5%</span>
+          <div class="option-radio">
+            <div class="option-radio-dot"></div>
           </div>
         </div>
+
+        <div class="cashback-option" data-cb="entertainment">
+          <div class="option-icon">🎳</div>
+          <div class="option-text">
+            <div class="option-title">5% Активный отдых</div>
+            <div class="option-sub">Кино, катки, развлечения</div>
+          </div>
+          <div class="option-radio">
+            <div class="option-radio-dot"></div>
+          </div>
+        </div>
+
+        <div class="sheet-lock">
+          Ещё одна категория будет доступна с&nbsp;подпиской Альфа-Смарт
+        </div>
       </div>
+
+      <!-- Список "Рядом с вами" / "Ваш кэшбэк" -->
+      <div class="near-header" id="nearHeader">В радиусе 3 км</div>
+      <div class="near-list" id="nearList"></div>
     </div>
+  </div>
 
-    <!-- BOTTOM SHEET -->
-    <div class="bottom-sheet">
-      <div class="bottom-inner">
-        <div class="bottom-header">
-          <div>
-            <div class="bottom-title">Заведения рядом</div>
-            <div class="bottom-sub" id="bottomSub">Показываем все категории</div>
-          </div>
-        </div>
-        <div class="bottom-list" id="placesList">
-          <!-- Карточки заведений сюда -->
+  <!-- HEATMAP OVERLAY -->
+  <div class="heat-overlay" id="heatOverlay">
+    <div class="heat-inner">
+      <div class="heat-title">Средний кэшбэк по районам</div>
+      <div class="heat-sub">
+        Нажмите на область, чтобы увидеть размер среднего кэшбэка.
+      </div>
+
+      <div class="heat-card">
+        <div class="heat-card-icon">🧭</div>
+        <div class="heat-card-text">
+          <div class="heat-card-title">Навигатор по районам</div>
+          <div>Нажмите на круг, чтобы увидеть средний размер кэшбэка в выбранной зоне.</div>
         </div>
       </div>
     </div>
   </div>
+</div>
 
-  <script>
-    let map;
-    let markersLayer;
-    let zonesLayer;
-    let allPoints = [];
-    let filteredPoints = [];
-    let currentCbCategory = "all";
-    let heatMode = false;
+<script>
+  // ====== КАРТА ======
+  let map, markersLayer, zonesLayer;
+  let allPoints = [];
+  let filteredPoints = [];
+  let currentCbCategory = "all"; // fastfood | sport | entertainment | active | all
+  let heatMode = false;
 
-    // Гид по району — только рестораны
-    let guideRestaurants = [];
-    let guideIndex = 0;
-    const GUIDE_MAX = 5;
+  // Для гида по району
+  let guideRestaurants = [];
+  let guideIndex = 0;
 
-    const titleLabel = document.getElementById("titleLabel");
-    const backBtn = document.getElementById("backBtn");
-    const osadkiBtn = document.getElementById("osadkiBtn");
-    const cbChips = document.querySelectorAll(".cb-chip");
-    const cbValue = document.getElementById("cbValue");
-    const cbTag = document.getElementById("cbTag");
-    const bottomSub = document.getElementById("bottomSub");
-    const placesList = document.getElementById("placesList");
-    const guideCard = document.getElementById("guideCard");
-    const guideNextBtn = document.getElementById("guideNextBtn");
-    const guideVenueName = document.getElementById("guideVenueName");
-    const guideVenueMeta = document.getElementById("guideVenueMeta");
-    const guideVenueCheck = document.getElementById("guideVenueCheck");
-    const guideVenueCb = document.getElementById("guideVenueCb");
-    const guideProgressBar = document.getElementById("guideProgressBar");
-    const heatBanner = document.getElementById("heatBanner");
+  // "Районы" для режима осадков (можно вынести в average-zones.json)
+  const averageZones = [
+    { name: "ЦАО", lat: 55.7558, lon: 37.6173, avgCb: 6.5 },
+    { name: "СЗАО", lat: 55.8031, lon: 37.4096, avgCb: 5.0 },
+    { name: "ЮЗАО", lat: 55.655, lon: 37.5432, avgCb: 4.0 },
+    { name: "ЮВАО", lat: 55.69, lon: 37.75, avgCb: 3.5 },
+    { name: "СВАО", lat: 55.857, lon: 37.624, avgCb: 4.5 }
+  ];
 
-    // Простейшие "районы" для осадков кэшбэка
-    const averageZones = [
-      { name: "ЦАО", lat: 55.7558, lon: 37.6173, avgCb: 6.5 },
-      { name: "СЗАО", lat: 55.8031, lon: 37.4096, avgCb: 5.0 },
-      { name: "ЮЗАО", lat: 55.6550, lon: 37.5432, avgCb: 4.0 },
-      { name: "ЮВАО", lat: 55.6900, lon: 37.7500, avgCb: 3.5 },
-      { name: "СВАО", lat: 55.8570, lon: 37.6240, avgCb: 4.5 }
-    ];
+  function initMap() {
+    map = L.map("map", { zoomControl: false }).setView([55.75, 37.61], 11);
 
-    function initMap() {
-      map = L.map("map", {
-        zoomControl: false
-      }).setView([55.75, 37.61], 11);
+    L.tileLayer(
+      "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+      { maxZoom: 19 }
+    ).addTo(map);
 
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 19
-      }).addTo(map);
+    markersLayer = L.layerGroup().addTo(map);
+    zonesLayer = L.layerGroup().addTo(map);
 
-      markersLayer = L.layerGroup().addTo(map);
-      zonesLayer = L.layerGroup().addTo(map);
+    loadPoints();
+  }
 
-      loadPoints();
-    }
+  function loadPoints() {
+    // отключаем кэш GitHub Pages
+    fetch("points.json?v=" + Date.now())
+      .then((r) => r.json())
+      .then((data) => {
+        allPoints = data;
+        applyFilters();
+        prepareGuide();
+      })
+      .catch((err) => console.error("Ошибка загрузки points.json:", err));
+  }
 
-    function loadPoints() {
-      // Отключаем кеш GitHub Pages
-      fetch("points.json?v=" + Date.now())
-        .then((r) => r.json())
-        .then((data) => {
-          allPoints = data;
-          applyFilters();
-          prepareGuide();
-        })
-        .catch((err) => console.error("Ошибка points.json:", err));
-    }
+  // Фильтрация по текущему кэшбэку + поиску
+  function applyFilters() {
+    const search = document
+      .getElementById("searchInput")
+      .value.trim()
+      .toLowerCase();
 
-    function applyFilters() {
-      if (heatMode) {
-        // в режиме осадков точки не показываем, только зоны
-        markersLayer.clearLayers();
-        renderZones();
-        return;
+    filteredPoints = allPoints.filter((p) => {
+      if (!p.lat || !p.lon) return false;
+
+      // фильтр по cbCategory
+      if (currentCbCategory !== "all" && p.cbCategory !== currentCbCategory) {
+        return false;
       }
 
-      filteredPoints = allPoints.filter((p) => {
-        if (!p.lat || !p.lon) return false;
-        if (currentCbCategory === "all") return true;
-        return p.cbCategory === currentCbCategory;
-      });
+      // фильтр по поиску
+      if (search) {
+        const haystack =
+          (p.name || "") + " " + (p.address || "") + " " + (p.category || "");
+        if (!haystack.toLowerCase().includes(search)) return false;
+      }
 
+      return true;
+    });
+
+    if (!heatMode) {
       renderMarkers();
-      renderList();
-      updateCashbackHeader();
     }
+    renderList();
+  }
 
-    function renderMarkers() {
-      markersLayer.clearLayers();
-      filteredPoints.forEach((p) => {
-        const m = L.marker([p.lat, p.lon]).addTo(markersLayer);
-        m.bindPopup(
-          "<b>" +
-            (p.name || "Заведение") +
-            "</b><br>" +
-            (p.address || "Москва") +
-            "<br>Средний чек: " +
-            (p.avgCheck || "—") +
-            " ₽<br>Кэшбэк: " +
-            (p.cashback || "—") +
-            "%"
-        );
-        m.on("click", () => {
-          map.setView([p.lat, p.lon], 14, { animate: true });
-        });
-      });
-    }
+  function renderMarkers() {
+    markersLayer.clearLayers();
+    filteredPoints.forEach((p) => {
+      const marker = L.circleMarker([p.lat, p.lon], {
+        radius: 6,
+        color: "#ffffff",
+        weight: 1,
+        fillColor: categoryColor(p.cbCategory),
+        fillOpacity: 0.9
+      }).addTo(markersLayer);
 
-    function renderList() {
-      placesList.innerHTML = "";
-      if (!filteredPoints.length) {
-        const empty = document.createElement("div");
-        empty.style.padding = "8px 10px";
-        empty.style.fontSize = "12px";
-        empty.style.color = "#9ca3af";
-        empty.textContent = "Нет заведений по выбранным условиям.";
-        placesList.appendChild(empty);
-        return;
-      }
-
-      filteredPoints.forEach((p) => {
-        const card = document.createElement("div");
-        card.className = "place-card";
-        card.innerHTML = `
-          <div class="place-name">${p.name || "Заведение"}</div>
-          <div class="place-meta">${p.address || "Москва"}</div>
-          <div class="place-row">
-            <div class="place-cb">Кэшбэк: ${p.cashback || "—"}%</div>
-            <div class="place-check">Чек: ${p.avgCheck || "—"} ₽</div>
-          </div>
-        `;
-        card.addEventListener("click", () => {
-          map.setView([p.lat, p.lon], 14, { animate: true });
-        });
-        placesList.appendChild(card);
-      });
-    }
-
-    function updateCashbackHeader() {
-      let label = "Все категории";
-      if (currentCbCategory === "active") label = "АЗС";
-      if (currentCbCategory === "fastfood") label = "Рестораны";
-      if (currentCbCategory === "sport") label = "Спорт";
-      if (currentCbCategory === "entertainment") label = "Развлечения";
-
-      bottomSub.textContent =
-        currentCbCategory === "all"
-          ? "Показываем все категории"
-          : "Показываем: " + label;
-
-      if (currentCbCategory === "all") {
-        cbValue.textContent = "до 7%";
-        cbTag.textContent = "АЗС, рестораны, спорт, развлечения";
-      } else if (currentCbCategory === "active") {
-        cbValue.textContent = "до 7%";
-        cbTag.textContent = "АЗС";
-      } else {
-        cbValue.textContent = "до 5%";
-        cbTag.textContent = label;
-      }
-    }
-
-    // ====== Гид по району (только рестораны) =======
-    function distance2(lat1, lon1, lat2, lon2) {
-      const dx = lat1 - lat2;
-      const dy = lon1 - lon2;
-      return dx * dx + dy * dy;
-    }
-
-    function prepareGuide() {
-      const center = map.getCenter();
-      const restaurants = allPoints.filter((p) =>
-        (p.category || "").toLowerCase().includes("рест")
+      marker.bindPopup(
+        `<b>${p.name || "Заведение"}</b><br>
+        ${(p.address || "Москва")}<br>
+        Категория: ${(p.category || "—")}<br>
+        Средний чек: ${(p.avgCheck || "—")} ₽<br>
+        Кэшбэк: ${(p.cashback || "—")}%`
       );
 
-      restaurants.sort((a, b) => {
-        const da = distance2(center.lat, center.lng, a.lat, a.lon);
-        const db = distance2(center.lat, center.lng, b.lat, b.lon);
-        return da - db;
+      marker.on("click", () => {
+        map.setView([p.lat, p.lon], 14, { animate: true });
+      });
+    });
+  }
+
+  function categoryColor(cb) {
+    switch (cb) {
+      case "fastfood":
+        return "#22c55e";
+      case "sport":
+        return "#0ea5e9";
+      case "entertainment":
+        return "#f97316";
+      case "active":
+        return "#a855f7";
+      default:
+        return "#e5e7eb";
+    }
+  }
+
+  // ====== СПИСОК ЗАВЕДЕНИЙ (НИЖНИЙ) ======
+  function renderList() {
+    const list = document.getElementById("nearList");
+    list.innerHTML = "";
+
+    const nearHeader = document.getElementById("nearHeader");
+    nearHeader.textContent = "В радиусе 3 км";
+
+    // сортируем по "дистанции" от центра Москвы (упрощённо)
+    const center = { lat: 55.75, lon: 37.61 };
+    const sorted = [...filteredPoints].sort((a, b) => {
+      const da =
+        (a.lat - center.lat) * (a.lat - center.lat) +
+        (a.lon - center.lon) * (a.lon - center.lon);
+      const db =
+        (b.lat - center.lat) * (b.lat - center.lat) +
+        (b.lon - center.lon) * (b.lon - center.lon);
+      return da - db;
+    });
+
+    sorted.forEach((p) => {
+      const div = document.createElement("div");
+      div.className =
+        "near-card " + nearCardClass(p.cbCategory || "active");
+
+      const distanceKm = (Math.random() * 2.5 + 0.3).toFixed(1); // фейк-расстояние
+
+      div.innerHTML = `
+        <div class="near-card-header">
+          <div>
+            ${p.name || "Заведение"}
+            <div class="near-brand">${p.category || ""}</div>
+          </div>
+          <div>${distanceKm} км</div>
+        </div>
+        <div class="near-meta">
+          <div class="near-distance">Кэшбэк: ${p.cashback || "—"}%</div>
+          <div class="near-check">~${p.avgCheck || "—"} ₽</div>
+        </div>
+      `;
+
+      div.addEventListener("click", () => {
+        map.setView([p.lat, p.lon], 14, { animate: true });
       });
 
-      guideRestaurants = restaurants.slice(0, GUIDE_MAX);
-      guideIndex = 0;
-      updateGuideCard();
+      list.appendChild(div);
+    });
+
+    if (!sorted.length) {
+      const empty = document.createElement("div");
+      empty.style.fontSize = "12px";
+      empty.style.color = "#9ca3af";
+      empty.style.padding = "6px 2px";
+      empty.textContent = "Нет заведений по выбранным условиям.";
+      list.appendChild(empty);
+    }
+  }
+
+  function nearCardClass(cb) {
+    switch (cb) {
+      case "fastfood":
+        return "near-fastfood";
+      case "sport":
+        return "near-sport";
+      case "entertainment":
+        return "near-entertainment";
+      case "active":
+        return "near-active";
+      default:
+        return "near-active";
+    }
+  }
+
+  // ====== ГИД ПО РАЙОНУ (ТОЛЬКО РЕСТОРАНЫ) ======
+  function prepareGuide() {
+    // Берём точки, где category содержит "Рестораны" или cbCategory == fastfood
+    const restaurants = allPoints.filter((p) => {
+      const cat = (p.category || "").toLowerCase();
+      return cat.includes("рест") || p.cbCategory === "fastfood";
+    });
+
+    const center = { lat: 55.75, lon: 37.61 };
+    restaurants.sort((a, b) => {
+      const da =
+        (a.lat - center.lat) * (a.lat - center.lat) +
+        (a.lon - center.lon) * (a.lon - center.lon);
+      const db =
+        (b.lat - center.lat) * (b.lat - center.lat) +
+        (b.lon - center.lon) * (b.lon - center.lon);
+      return da - db;
+    });
+
+    guideRestaurants = restaurants.slice(0, 5);
+    guideIndex = 0;
+
+    renderGuideSteps();
+    updateGuideCard();
+  }
+
+  function renderGuideSteps() {
+    const container = document.getElementById("guideSteps");
+    container.innerHTML = "";
+    for (let i = 0; i < 5; i++) {
+      const circle = document.createElement("div");
+      circle.className = "guide-step-bubble" + (i === guideIndex ? " active" : "");
+      circle.textContent = i + 1;
+      container.appendChild(circle);
+    }
+  }
+
+  function updateGuideCard() {
+    const titleEl = document.getElementById("guideTitle");
+    const subEl = document.getElementById("guideSub");
+
+    if (!guideRestaurants.length) {
+      titleEl.textContent = "Рядом нет подходящих ресторанов";
+      subEl.textContent = "Попробуйте увеличить область карты.";
+      renderGuideSteps();
+      return;
     }
 
-    function updateGuideCard() {
-      if (!guideRestaurants.length) {
-        guideVenueName.textContent = "Заведений рядом не найдено";
-        guideVenueMeta.textContent = "Попробуйте переместить карту";
-        guideVenueCheck.textContent = "Средний чек: — ₽";
-        guideVenueCb.textContent = "Кэшбэк: —%";
-        guideProgressBar.style.width = "0%";
-        return;
-      }
+    const p = guideRestaurants[guideIndex];
+    titleEl.textContent = "Посетите " + (p.name || "ресторан");
+    subEl.textContent = p.address || "Москва";
 
-      const p = guideRestaurants[guideIndex];
-      guideVenueName.textContent = p.name || "Ресторан";
-      guideVenueMeta.textContent = p.address || "Москва";
-      guideVenueCheck.textContent = "Средний чек: " + (p.avgCheck || "—") + " ₽";
-      guideVenueCb.textContent = "Кэшбэк: " + (p.cashback || "—") + "%";
+    renderGuideSteps();
+  }
 
-      const progress = ((guideIndex + 1) / guideRestaurants.length) * 100;
-      guideProgressBar.style.width = progress + "%";
-    }
+  function nextGuideItem() {
+    if (!guideRestaurants.length) return;
+    guideIndex = (guideIndex + 1) % guideRestaurants.length;
+    updateGuideCard();
+  }
 
-    function nextGuideItem() {
-      if (!guideRestaurants.length) return;
-      guideIndex = (guideIndex + 1) % guideRestaurants.length;
-      updateGuideCard();
-    }
+  // ====== ОСАДКИ (HEATMAP) ======
+  function enterHeatMode() {
+    heatMode = true;
+    document.getElementById("heatOverlay").classList.add("visible");
+    document.getElementById("mainPanel").style.display = "none";
+    document.getElementById("btnBack").classList.remove("hidden");
 
-    // ====== Осадки (heatMode) =======
-    function enterHeatMode() {
-      heatMode = true;
-      document.body.classList.add("heatmode-active");
-      backBtn.classList.add("visible");
-      titleLabel.textContent = "Осадки кэшбэка";
-      heatBanner.style.display = "block";
+    markersLayer.clearLayers();
+    zonesLayer.clearLayers();
 
-      markersLayer.clearLayers();
-      renderZones();
-    }
+    averageZones.forEach((z) => {
+      const color =
+        z.avgCb >= 6 ? "#ef4444" : z.avgCb >= 5 ? "#f97316" : "#22c55e";
 
-    function exitHeatMode() {
-      heatMode = false;
-      document.body.classList.remove("heatmode-active");
-      backBtn.classList.remove("visible");
-      titleLabel.textContent = "Ваш кэшбэк";
-      heatBanner.style.display = "none";
+      const circle = L.circle([z.lat, z.lon], {
+        radius: 4500,
+        color,
+        weight: 1.5,
+        fillColor: color,
+        fillOpacity: 0.25
+      }).addTo(zonesLayer);
 
-      zonesLayer.clearLayers();
+      circle.bindPopup(
+        `<b>${z.name}</b><br>Средний кэшбэк: ${z.avgCb.toFixed(1)}%`
+      );
+    });
+  }
+
+  function exitHeatMode() {
+    heatMode = false;
+    document.getElementById("heatOverlay").classList.remove("visible");
+    document.getElementById("mainPanel").style.display = "";
+    document.getElementById("btnBack").classList.add("hidden");
+
+    zonesLayer.clearLayers();
+    applyFilters();
+  }
+
+  // ====== UI-СВЯЗКА ======
+  function initUI() {
+    const tabCashback = document.getElementById("tabCashback");
+    const tabNear = document.getElementById("tabNear");
+    const cashbackSheet = document.getElementById("cashbackSheet");
+    const osadkiBanner = document.getElementById("osadkiBanner");
+    const btnBack = document.getElementById("btnBack");
+    const guideNextBtn = document.getElementById("guideNextBtn");
+
+    // Табы
+    tabCashback.addEventListener("click", () => {
+      tabCashback.classList.add("active");
+      tabNear.classList.remove("active");
+      cashbackSheet.classList.add("visible");
+      currentCbCategory = selectedCbCategory || "all";
       applyFilters();
-    }
-
-    function renderZones() {
-      zonesLayer.clearLayers();
-      averageZones.forEach((z) => {
-        const color =
-          z.avgCb >= 6 ? "#ef4444" : z.avgCb >= 5 ? "#f97316" : "#22c55e";
-        const circle = L.circle([z.lat, z.lon], {
-          radius: 2200,
-          color,
-          weight: 1.5,
-          fillColor: color,
-          fillOpacity: 0.25
-        }).addTo(zonesLayer);
-
-        circle.bindPopup(
-          "<b>" +
-            z.name +
-            "</b><br>Средний кэшбэк в районе: " +
-            z.avgCb.toFixed(1) +
-            "%"
-        );
-      });
-    }
-
-    // ====== Слушатели =======
-    osadkiBtn.addEventListener("click", () => {
-      if (!heatMode) enterHeatMode();
     });
 
-    backBtn.addEventListener("click", () => {
-      if (heatMode) {
-        exitHeatMode();
-      }
+    tabNear.addEventListener("click", () => {
+      tabNear.classList.add("active");
+      tabCashback.classList.remove("active");
+      cashbackSheet.classList.remove("visible");
+      currentCbCategory = "all";
+      applyFilters();
     });
 
-    cbChips.forEach((chip) => {
-      chip.addEventListener("click", () => {
-        cbChips.forEach((c) => c.classList.remove("active"));
-        chip.classList.add("active");
-        currentCbCategory = chip.dataset.cat;
-        if (!heatMode) {
-          applyFilters();
-        }
+    // Осадки
+    osadkiBanner.addEventListener("click", enterHeatMode);
+    btnBack.addEventListener("click", exitHeatMode);
+
+    // Гид по району
+    guideNextBtn.addEventListener("click", nextGuideItem);
+
+    // Поиск
+    document.getElementById("searchInput").addEventListener("input", () => {
+      if (!heatMode) applyFilters();
+    });
+
+    // Лист кэшбэка
+    const options = document.querySelectorAll(".cashback-option");
+    options.forEach((opt) => {
+      opt.addEventListener("click", () => {
+        options.forEach((o) => o.classList.remove("active"));
+        opt.classList.add("active");
+        selectedCbCategory = opt.dataset.cb;
+        currentCbCategory = selectedCbCategory;
+        applyFilters();
       });
     });
+  }
 
-    guideNextBtn.addEventListener("click", () => {
-      nextGuideItem();
-    });
+  let selectedCbCategory = null;
 
-    // Обновляем гид при движении карты
-    let guideTimeout = null;
-    function scheduleGuideUpdate() {
-      if (guideTimeout) clearTimeout(guideTimeout);
-      guideTimeout = setTimeout(() => {
-        if (!heatMode) prepareGuide();
-      }, 600);
-    }
-    // если не хочется — можно закомментировать
-    map?.on?.("moveend", scheduleGuideUpdate);
-
-    // Инициализация
-    window.addEventListener("load", initMap);
-  </script>
+  // ====== START ======
+  window.addEventListener("DOMContentLoaded", () => {
+    initMap();
+    initUI();
+  });
+</script>
 </body>
 </html>
