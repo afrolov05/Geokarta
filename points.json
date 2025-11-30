@@ -1,5 +1,5 @@
 [
-  /* ----------------------------- АЗС (1–25) ----------------------------- */
+ 
   { "id": 1, "name": "Лукойл", "category": "АЗС", "address": "Москва, Ленинградское ш. 12", "avgCheck": 3900, "cbCategory": "active", "brand": "lukoil", "cashback": 7, "lat": 55.8541, "lon": 37.4701 },
   { "id": 2, "name": "Татнефть", "category": "АЗС", "address": "Москва, МКАД 65 км", "avgCheck": 3900, "cbCategory": "active", "brand": "tatneft", "cashback": 7, "lat": 55.6512, "lon": 37.8122 },
   { "id": 3, "name": "Лукойл", "category": "АЗС", "address": "Москва, Варшавское ш. 98", "avgCheck": 3900, "cbCategory": "active", "brand": "lukoil", "cashback": 7, "lat": 55.5904, "lon": 37.6119 },
@@ -29,7 +29,7 @@
   { "id": 24, "name": "Татнефть", "category": "АЗС", "address": "Москва, Хорошёвское ш. 33", "avgCheck": 3900, "cbCategory": "active", "brand": "tatneft", "cashback": 7, "lat": 55.7801, "lon": 37.5127 },
   { "id": 25, "name": "Газпромнефть", "category": "АЗС", "address": "Москва, Панфилова 12", "avgCheck": 3900, "cbCategory": "active", "brand": "gpn", "cashback": 7, "lat": 55.7909, "lon": 37.4918 },
 
-  /* ----------------------- Рестораны (26–50) ----------------------- */
+
   { "id": 26, "name": "Шоколадница", "category": "Рестораны", "address": "Москва, Тверская 5", "avgCheck": 850, "cbCategory": "fastfood", "brand": "shoko", "cashback": 5, "lat": 55.7591, "lon": 37.6124 },
   { "id": 27, "name": "Остерия Марио", "category": "Рестораны", "address": "Москва, Проспект Вернадского 6", "avgCheck": 1200, "cbCategory": "fastfood", "brand": "mario", "cashback": 5, "lat": 55.6772, "lon": 37.5051 },
   { "id": 28, "name": "Бургер Кинг", "category": "Рестораны", "address": "Москва, Арбат 22", "avgCheck": 600, "cbCategory": "fastfood", "brand": "bk", "cashback": 5, "lat": 55.7472, "lon": 37.5930 },
@@ -48,7 +48,7 @@
   { "id": 39, "name": "Бургер Кинг", "category": "Рестораны", "address": "Москва, Университетский пр. 15", "avgCheck": 600, "cbCategory": "fastfood", "brand": "bk", "cashback": 5, "lat": 55.6829, "lon": 37.5138 },
   { "id": 40, "name": "Тануки", "category": "Рестораны", "address": "Москва, Киевская 2", "avgCheck": 1600, "cbCategory": "fastfood", "brand": "tanuki", "cashback": 5, "lat": 55.7453, "lon": 37.5661 },
 
-  /* ------------------------ Спорттовары (51–60) ------------------------ */
+
   { "id": 51, "name": "Спортмастер", "category": "Спорт", "address": "Москва, ТЦ Европейский", "avgCheck": 3200, "cbCategory": "sport", "brand": "sportmaster", "cashback": 5, "lat": 55.7449, "lon": 37.5651 },
   { "id": 52, "name": "Декатлон", "category": "Спорт", "address": "Москва, Крылатское 3", "avgCheck": 2800, "cbCategory": "sport", "brand": "decathlon", "cashback": 5, "lat": 55.7561, "lon": 37.4064 },
   { "id": 53, "name": "Спортмастер", "category": "Спорт", "address": "Москва, Автозаводская 18", "avgCheck": 3100, "cbCategory": "sport", "brand": "sportmaster", "cashback": 5, "lat": 55.7073, "lon": 37.6619 },
@@ -61,7 +61,7 @@
   { "id": 59, "name": "Спортмастер", "category": "Спорт", "address": "Москва, Марьино 3", "avgCheck": 3200, "cbCategory": "sport", "brand": "sportmaster", "cashback": 5, "lat": 55.6521, "lon": 37.7432 },
   { "id": 60, "name": "Декатлон", "category": "Спорт", "address": "Москва, Новокосино 4", "avgCheck": 2800, "cbCategory": "sport", "brand": "decathlon", "cashback": 5, "lat": 55.7402, "lon": 37.8561 },
 
-  /* ------------------------ Развлечения (76–80) ------------------------ */
+
   { "id": 76, "name": "Синема Парк", "category": "Развлечения", "address": "Москва, ТРК VEGAS", "avgCheck": 1200, "cbCategory": "active", "brand": "cinema", "cashback": 5, "lat": 55.5782, "lon": 37.6903 },
   { "id": 77, "name": "Киномакс", "category": "Развлечения", "address": "Москва, ТЦ XL", "avgCheck": 1300, "cbCategory": "active", "brand": "kinomax", "cashback": 5, "lat": 55.8882, "lon": 37.4532 },
   { "id": 78, "name": "Москино", "category": "Развлечения", "address": "Москва, Чистые пруды 7", "avgCheck": 900, "cbCategory": "active", "brand": "moskino", "cashback": 5, "lat": 55.7621, "lon": 37.6423 },
