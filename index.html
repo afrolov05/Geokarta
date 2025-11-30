@@ -3,155 +3,822 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Геокарта — Кэшбэк</title>
+  <title>Геокарта — кэшбэк</title>
 
   <!-- Leaflet -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <!-- Base UI -->
   <style>
+    :root {
+      --bg-main: #050509;
+      --bg-card: #141418;
+      --bg-chip: #1c1c21;
+      --accent: #e11d48;
+      --accent-soft: rgba(225, 29, 72, 0.16);
+      --text-main: #f9fafb;
+      --text-muted: #9ca3af;
+      --border-subtle: rgba(255, 255, 255, 0.06);
+      --radius-lg: 20px;
+      --radius-md: 14px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
       padding: 0;
-      background: #0B0B0C;
-      color: white;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui,
+        sans-serif;
+      background: var(--bg-main);
+      color: var(--text-main);
+      overflow: hidden;
+    }
+
+    #app {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
       overflow: hidden;
     }
 
     /* MAP */
     #map {
-      width: 100vw;
-      height: 100vh;
+      position: absolute;
+      inset: 0;
+      z-index: 1;
     }
 
-    /* FILTER PANEL */
-    .filter-bar {
-      position: fixed;
-      bottom: 22px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(20,20,21,0.85);
-      backdrop-filter: blur(14px);
+    /* TOP OVERLAY */
+    .top-panel {
+      position: absolute;
+      top: env(safe-area-inset-top, 12px);
+      left: 0;
+      right: 0;
+      padding: 12px 16px 8px;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .top-row {
       display: flex;
-      gap: 10px;
-      padding: 10px 16px;
-      border-radius: 18px;
-      z-index: 9999;
-      border: 1px solid rgba(255,255,255,0.08);
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
     }
 
-    .filter-btn {
-      background: #151518;
-      color: #e6e6e6;
-      border: 1px solid #2A2A2C;
-      border-radius: 12px;
-      padding: 8px 14px;
-      font-size: 15px;
+    .back-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      border: 1px solid var(--border-subtle);
+      background: rgba(5, 5, 9, 0.82);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
       cursor: pointer;
-      transition: 0.25s;
+      pointer-events: auto;
+      visibility: hidden;
     }
 
-    .filter-btn.active {
-      background: #E11D48;
-      border-color: #E11D48;
+    .back-btn.visible {
+      visibility: visible;
+    }
+
+    .title-chip {
+      pointer-events: auto;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(5, 5, 9, 0.8);
+      border: 1px solid var(--border-subtle);
+      font-size: 13px;
+      color: var(--text-muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .title-chip span.label {
+      color: var(--text-main);
+      font-weight: 500;
+    }
+
+    .osadki-btn {
+      pointer-events: auto;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: var(--bg-chip);
+      border: 1px solid var(--border-subtle);
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      color: var(--text-main);
+    }
+
+    .osadki-btn span.drop {
+      font-size: 16px;
+    }
+
+    /* CASHBACK CARD + GUIDE */
+    .top-cards {
+      pointer-events: auto;
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .cashback-card {
+      background: radial-gradient(
+          circle at 0 0,
+          rgba(225, 29, 72, 0.18),
+          transparent 60%
+        ),
+        var(--bg-card);
+      border-radius: var(--radius-lg);
+      padding: 10px 12px;
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .cashback-left {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .cashback-title {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .cashback-value {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .cashback-tag {
+      margin-top: 2px;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      align-self: flex-start;
+    }
+
+    .cashback-right {
+      text-align: right;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .guide-card {
+      background: rgba(10, 10, 15, 0.92);
+      border-radius: var(--radius-lg);
+      padding: 10px 12px;
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .guide-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .guide-title {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .guide-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .guide-next-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: 999px;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-chip);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .guide-main {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .guide-venue-name {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .guide-venue-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .guide-progress-wrapper {
+      margin-top: 4px;
+      width: 100%;
+      height: 4px;
+      border-radius: 999px;
+      background: #1f2933;
+      overflow: hidden;
+    }
+
+    .guide-progress-bar {
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, #22c55e, #eab308);
+      transition: width 0.25s ease-out;
+    }
+
+    /* CASHBACK CATEGORY CHIPS */
+    .cashback-categories {
+      pointer-events: auto;
+      margin-top: 8px;
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .cb-chip {
+      flex-shrink: 0;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: var(--bg-chip);
+      border: 1px solid var(--border-subtle);
+      font-size: 12px;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .cb-chip.active {
+      background: var(--accent);
+      border-color: var(--accent);
       color: white;
     }
 
-    /* Popup styling */
-    .leaflet-popup-content-wrapper {
-      background: #ffffff;
-      color: #000;
-      border-radius: 12px;
-      padding: 10px 14px;
+    .cb-chip span.pct {
+      font-size: 11px;
+      opacity: 0.9;
     }
 
-    .leaflet-popup-tip {
-      background: #ffffff;
+    /* BOTTOM SHEET: LIST NEAR YOU */
+    .bottom-sheet {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 9;
+      padding: 8px 0 12px;
+      pointer-events: none;
+    }
+
+    .bottom-inner {
+      pointer-events: auto;
+      margin: 0 12px env(safe-area-inset-bottom, 8px);
+      background: rgba(10, 10, 15, 0.96);
+      border-radius: 18px 18px 0 0;
+      border: 1px solid var(--border-subtle);
+      max-height: 44vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .bottom-header {
+      padding: 8px 12px 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .bottom-title {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .bottom-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .bottom-list {
+      padding: 4px 4px 8px;
+      overflow-y: auto;
+    }
+
+    .place-card {
+      border-radius: 14px;
+      padding: 8px 10px;
+      margin: 4px 4px;
+      background: #111827;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      font-size: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      cursor: pointer;
+    }
+
+    .place-name {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .place-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .place-row {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 2px;
+    }
+
+    .place-cb {
+      font-size: 11px;
+      color: #4ade80;
+    }
+
+    .place-check {
+      font-size: 11px;
+      color: #e5e7eb;
+    }
+
+    /* HEATMODE OVERLAY (ОСАДКИ) */
+    .heatmode-active .cashback-card,
+    .heatmode-active .guide-card,
+    .heatmode-active .cashback-categories,
+    .heatmode-active .bottom-sheet {
+      display: none;
+    }
+
+    .heat-banner {
+      display: none;
+      margin-top: 8px;
+      pointer-events: auto;
+      padding: 10px 12px;
+      border-radius: var(--radius-lg);
+      background: rgba(10, 10, 15, 0.92);
+      border: 1px solid var(--border-subtle);
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .heatmode-active .heat-banner {
+      display: block;
+    }
+
+    .heat-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-main);
+      margin-bottom: 4px;
+    }
+
+    @media (min-width: 768px) {
+      .top-panel {
+        max-width: 420px;
+        margin: 0 auto;
+      }
+      .bottom-inner {
+        max-width: 420px;
+        margin-left: auto;
+        margin-right: auto;
+      }
     }
   </style>
 </head>
 <body>
+  <div id="app">
+    <div id="map"></div>
 
-<!-- MAP -->
-<div id="map"></div>
+    <!-- TOP OVERLAY -->
+    <div class="top-panel">
+      <div class="top-row">
+        <button id="backBtn" class="back-btn" aria-label="Назад">←</button>
 
-<!-- FILTERS -->
-<div class="filter-bar">
-  <button class="filter-btn active" data-cat="all">Все</button>
-  <button class="filter-btn" data-cat="active">АЗС</button>
-  <button class="filter-btn" data-cat="fastfood">Рестораны</button>
-  <button class="filter-btn" data-cat="sport">Спорт</button>
-  <button class="filter-btn" data-cat="entertainment">Развлечения</button>
-</div>
+        <div class="title-chip">
+          <span class="label" id="titleLabel">Ваш кэшбэк</span>
+        </div>
 
-<script>
-/* ==============================
-   ИНИЦИАЛИЗАЦИЯ КАРТЫ
-   ============================== */
-let map = L.map('map').setView([55.75, 37.61], 11);
+        <button id="osadkiBtn" class="osadki-btn">
+          <span class="drop">💧</span>
+          <span>Осадки</span>
+        </button>
+      </div>
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 19
-}).addTo(map);
+      <div class="top-cards">
+        <!-- Кэшбэк карточка -->
+        <div class="cashback-card">
+          <div class="cashback-left">
+            <div class="cashback-title">Кэшбэк по выбранной категории</div>
+            <div class="cashback-value" id="cbValue">до 7%</div>
+            <div class="cashback-tag" id="cbTag">АЗС, рестораны, спорт, развлечения</div>
+          </div>
+          <div class="cashback-right">
+            <div>Выберите категорию,</div>
+            <div>чтобы увидеть заведения</div>
+          </div>
+        </div>
 
-/* ==============================
-   ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
-   ============================== */
-let markers = [];
-let currentCategory = "all";
+        <!-- Гид по району -->
+        <div class="guide-card" id="guideCard">
+          <div class="guide-header">
+            <div>
+              <div class="guide-title">Гид по району</div>
+              <div class="guide-sub">Рекомендуем рестораны неподалёку</div>
+            </div>
+            <button class="guide-next-btn" id="guideNextBtn" aria-label="Следующее место">✓</button>
+          </div>
+          <div class="guide-main">
+            <div>
+              <div class="guide-venue-name" id="guideVenueName">—</div>
+              <div class="guide-venue-meta" id="guideVenueMeta">—</div>
+            </div>
+            <div style="text-align:right; font-size:11px; color:var(--text-muted);">
+              <div id="guideVenueCheck">Средний чек: — ₽</div>
+              <div id="guideVenueCb">Кэшбэк: —%</div>
+            </div>
+          </div>
+          <div class="guide-progress-wrapper">
+            <div class="guide-progress-bar" id="guideProgressBar"></div>
+          </div>
+        </div>
 
-/* ==============================
-   ЗАГРУЗКА ТОЧЕК
-   ============================== */
-function loadPoints() {
-  fetch("points.json?v=" + Date.now())  // отключаем кеш GitHub Pages
-    .then(res => res.json())
-    .then(points => renderPoints(points))
-    .catch(err => console.error("Ошибка загрузки points.json:", err));
-}
+        <!-- Осадки инфо (heatmode) -->
+        <div class="heat-banner" id="heatBanner">
+          <div class="heat-title">Осадки кэшбэка</div>
+          <div>
+            На карте показаны районы Москвы с разной средней ставкой кэшбэка. Нажмите «←», чтобы вернуться к конкретным заведениям.
+          </div>
+        </div>
 
-/* ==============================
-   ОТРИСОВКА ТОЧЕК
-   ============================== */
-function renderPoints(points) {
-  // удалить старые маркеры
-  markers.forEach(m => map.removeLayer(m));
-  markers = [];
+        <!-- Категории кэшбэка -->
+        <div class="cashback-categories" id="cbCategories">
+          <div class="cb-chip active" data-cat="all">
+            Все <span class="pct">• все категории</span>
+          </div>
+          <div class="cb-chip" data-cat="active">
+            АЗС <span class="pct">до 7%</span>
+          </div>
+          <div class="cb-chip" data-cat="fastfood">
+            Еда <span class="pct">до 5%</span>
+          </div>
+          <div class="cb-chip" data-cat="sport">
+            Спорт <span class="pct">до 5%</span>
+          </div>
+          <div class="cb-chip" data-cat="entertainment">
+            Развлечения <span class="pct">до 5%</span>
+          </div>
+        </div>
+      </div>
+    </div>
 
-  points
-    .filter(p => currentCategory === "all" || p.cbCategory === currentCategory)
-    .forEach(p => {
-      let marker = L.marker([p.lat, p.lon]).addTo(map);
-      marker.bindPopup(`
-        <b>${p.name}</b><br>
-        ${p.address}<br>
-        Средний чек: ${p.avgCheck} ₽<br>
-        Кэшбэк: ${p.cashback}%
-      `);
-      markers.push(marker);
+    <!-- BOTTOM SHEET -->
+    <div class="bottom-sheet">
+      <div class="bottom-inner">
+        <div class="bottom-header">
+          <div>
+            <div class="bottom-title">Заведения рядом</div>
+            <div class="bottom-sub" id="bottomSub">Показываем все категории</div>
+          </div>
+        </div>
+        <div class="bottom-list" id="placesList">
+          <!-- Карточки заведений сюда -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let map;
+    let markersLayer;
+    let zonesLayer;
+    let allPoints = [];
+    let filteredPoints = [];
+    let currentCbCategory = "all";
+    let heatMode = false;
+
+    // Гид по району — только рестораны
+    let guideRestaurants = [];
+    let guideIndex = 0;
+    const GUIDE_MAX = 5;
+
+    const titleLabel = document.getElementById("titleLabel");
+    const backBtn = document.getElementById("backBtn");
+    const osadkiBtn = document.getElementById("osadkiBtn");
+    const cbChips = document.querySelectorAll(".cb-chip");
+    const cbValue = document.getElementById("cbValue");
+    const cbTag = document.getElementById("cbTag");
+    const bottomSub = document.getElementById("bottomSub");
+    const placesList = document.getElementById("placesList");
+    const guideCard = document.getElementById("guideCard");
+    const guideNextBtn = document.getElementById("guideNextBtn");
+    const guideVenueName = document.getElementById("guideVenueName");
+    const guideVenueMeta = document.getElementById("guideVenueMeta");
+    const guideVenueCheck = document.getElementById("guideVenueCheck");
+    const guideVenueCb = document.getElementById("guideVenueCb");
+    const guideProgressBar = document.getElementById("guideProgressBar");
+    const heatBanner = document.getElementById("heatBanner");
+
+    // Простейшие "районы" для осадков кэшбэка
+    const averageZones = [
+      { name: "ЦАО", lat: 55.7558, lon: 37.6173, avgCb: 6.5 },
+      { name: "СЗАО", lat: 55.8031, lon: 37.4096, avgCb: 5.0 },
+      { name: "ЮЗАО", lat: 55.6550, lon: 37.5432, avgCb: 4.0 },
+      { name: "ЮВАО", lat: 55.6900, lon: 37.7500, avgCb: 3.5 },
+      { name: "СВАО", lat: 55.8570, lon: 37.6240, avgCb: 4.5 }
+    ];
+
+    function initMap() {
+      map = L.map("map", {
+        zoomControl: false
+      }).setView([55.75, 37.61], 11);
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19
+      }).addTo(map);
+
+      markersLayer = L.layerGroup().addTo(map);
+      zonesLayer = L.layerGroup().addTo(map);
+
+      loadPoints();
+    }
+
+    function loadPoints() {
+      // Отключаем кеш GitHub Pages
+      fetch("points.json?v=" + Date.now())
+        .then((r) => r.json())
+        .then((data) => {
+          allPoints = data;
+          applyFilters();
+          prepareGuide();
+        })
+        .catch((err) => console.error("Ошибка points.json:", err));
+    }
+
+    function applyFilters() {
+      if (heatMode) {
+        // в режиме осадков точки не показываем, только зоны
+        markersLayer.clearLayers();
+        renderZones();
+        return;
+      }
+
+      filteredPoints = allPoints.filter((p) => {
+        if (!p.lat || !p.lon) return false;
+        if (currentCbCategory === "all") return true;
+        return p.cbCategory === currentCbCategory;
+      });
+
+      renderMarkers();
+      renderList();
+      updateCashbackHeader();
+    }
+
+    function renderMarkers() {
+      markersLayer.clearLayers();
+      filteredPoints.forEach((p) => {
+        const m = L.marker([p.lat, p.lon]).addTo(markersLayer);
+        m.bindPopup(
+          "<b>" +
+            (p.name || "Заведение") +
+            "</b><br>" +
+            (p.address || "Москва") +
+            "<br>Средний чек: " +
+            (p.avgCheck || "—") +
+            " ₽<br>Кэшбэк: " +
+            (p.cashback || "—") +
+            "%"
+        );
+        m.on("click", () => {
+          map.setView([p.lat, p.lon], 14, { animate: true });
+        });
+      });
+    }
+
+    function renderList() {
+      placesList.innerHTML = "";
+      if (!filteredPoints.length) {
+        const empty = document.createElement("div");
+        empty.style.padding = "8px 10px";
+        empty.style.fontSize = "12px";
+        empty.style.color = "#9ca3af";
+        empty.textContent = "Нет заведений по выбранным условиям.";
+        placesList.appendChild(empty);
+        return;
+      }
+
+      filteredPoints.forEach((p) => {
+        const card = document.createElement("div");
+        card.className = "place-card";
+        card.innerHTML = `
+          <div class="place-name">${p.name || "Заведение"}</div>
+          <div class="place-meta">${p.address || "Москва"}</div>
+          <div class="place-row">
+            <div class="place-cb">Кэшбэк: ${p.cashback || "—"}%</div>
+            <div class="place-check">Чек: ${p.avgCheck || "—"} ₽</div>
+          </div>
+        `;
+        card.addEventListener("click", () => {
+          map.setView([p.lat, p.lon], 14, { animate: true });
+        });
+        placesList.appendChild(card);
+      });
+    }
+
+    function updateCashbackHeader() {
+      let label = "Все категории";
+      if (currentCbCategory === "active") label = "АЗС";
+      if (currentCbCategory === "fastfood") label = "Рестораны";
+      if (currentCbCategory === "sport") label = "Спорт";
+      if (currentCbCategory === "entertainment") label = "Развлечения";
+
+      bottomSub.textContent =
+        currentCbCategory === "all"
+          ? "Показываем все категории"
+          : "Показываем: " + label;
+
+      if (currentCbCategory === "all") {
+        cbValue.textContent = "до 7%";
+        cbTag.textContent = "АЗС, рестораны, спорт, развлечения";
+      } else if (currentCbCategory === "active") {
+        cbValue.textContent = "до 7%";
+        cbTag.textContent = "АЗС";
+      } else {
+        cbValue.textContent = "до 5%";
+        cbTag.textContent = label;
+      }
+    }
+
+    // ====== Гид по району (только рестораны) =======
+    function distance2(lat1, lon1, lat2, lon2) {
+      const dx = lat1 - lat2;
+      const dy = lon1 - lon2;
+      return dx * dx + dy * dy;
+    }
+
+    function prepareGuide() {
+      const center = map.getCenter();
+      const restaurants = allPoints.filter((p) =>
+        (p.category || "").toLowerCase().includes("рест")
+      );
+
+      restaurants.sort((a, b) => {
+        const da = distance2(center.lat, center.lng, a.lat, a.lon);
+        const db = distance2(center.lat, center.lng, b.lat, b.lon);
+        return da - db;
+      });
+
+      guideRestaurants = restaurants.slice(0, GUIDE_MAX);
+      guideIndex = 0;
+      updateGuideCard();
+    }
+
+    function updateGuideCard() {
+      if (!guideRestaurants.length) {
+        guideVenueName.textContent = "Заведений рядом не найдено";
+        guideVenueMeta.textContent = "Попробуйте переместить карту";
+        guideVenueCheck.textContent = "Средний чек: — ₽";
+        guideVenueCb.textContent = "Кэшбэк: —%";
+        guideProgressBar.style.width = "0%";
+        return;
+      }
+
+      const p = guideRestaurants[guideIndex];
+      guideVenueName.textContent = p.name || "Ресторан";
+      guideVenueMeta.textContent = p.address || "Москва";
+      guideVenueCheck.textContent = "Средний чек: " + (p.avgCheck || "—") + " ₽";
+      guideVenueCb.textContent = "Кэшбэк: " + (p.cashback || "—") + "%";
+
+      const progress = ((guideIndex + 1) / guideRestaurants.length) * 100;
+      guideProgressBar.style.width = progress + "%";
+    }
+
+    function nextGuideItem() {
+      if (!guideRestaurants.length) return;
+      guideIndex = (guideIndex + 1) % guideRestaurants.length;
+      updateGuideCard();
+    }
+
+    // ====== Осадки (heatMode) =======
+    function enterHeatMode() {
+      heatMode = true;
+      document.body.classList.add("heatmode-active");
+      backBtn.classList.add("visible");
+      titleLabel.textContent = "Осадки кэшбэка";
+      heatBanner.style.display = "block";
+
+      markersLayer.clearLayers();
+      renderZones();
+    }
+
+    function exitHeatMode() {
+      heatMode = false;
+      document.body.classList.remove("heatmode-active");
+      backBtn.classList.remove("visible");
+      titleLabel.textContent = "Ваш кэшбэк";
+      heatBanner.style.display = "none";
+
+      zonesLayer.clearLayers();
+      applyFilters();
+    }
+
+    function renderZones() {
+      zonesLayer.clearLayers();
+      averageZones.forEach((z) => {
+        const color =
+          z.avgCb >= 6 ? "#ef4444" : z.avgCb >= 5 ? "#f97316" : "#22c55e";
+        const circle = L.circle([z.lat, z.lon], {
+          radius: 2200,
+          color,
+          weight: 1.5,
+          fillColor: color,
+          fillOpacity: 0.25
+        }).addTo(zonesLayer);
+
+        circle.bindPopup(
+          "<b>" +
+            z.name +
+            "</b><br>Средний кэшбэк в районе: " +
+            z.avgCb.toFixed(1) +
+            "%"
+        );
+      });
+    }
+
+    // ====== Слушатели =======
+    osadkiBtn.addEventListener("click", () => {
+      if (!heatMode) enterHeatMode();
     });
-}
 
-/* ==============================
-   ФИЛЬТРЫ
-   ============================== */
-document.querySelectorAll(".filter-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
+    backBtn.addEventListener("click", () => {
+      if (heatMode) {
+        exitHeatMode();
+      }
+    });
 
-    currentCategory = btn.dataset.cat;
-    loadPoints();
-  });
-});
+    cbChips.forEach((chip) => {
+      chip.addEventListener("click", () => {
+        cbChips.forEach((c) => c.classList.remove("active"));
+        chip.classList.add("active");
+        currentCbCategory = chip.dataset.cat;
+        if (!heatMode) {
+          applyFilters();
+        }
+      });
+    });
 
-/* ==============================
-   ЗАПУСК
-   ============================== */
-loadPoints();
-</script>
+    guideNextBtn.addEventListener("click", () => {
+      nextGuideItem();
+    });
 
+    // Обновляем гид при движении карты
+    let guideTimeout = null;
+    function scheduleGuideUpdate() {
+      if (guideTimeout) clearTimeout(guideTimeout);
+      guideTimeout = setTimeout(() => {
+        if (!heatMode) prepareGuide();
+      }, 600);
+    }
+    // если не хочется — можно закомментировать
+    map?.on?.("moveend", scheduleGuideUpdate);
+
+    // Инициализация
+    window.addEventListener("load", initMap);
+  </script>
 </body>
 </html>
