@@ -17,7 +17,6 @@
       --bg-main: #05060a;
       --bg-card: #15161c;
       --bg-card-soft: #1f2027;
-      --bg-chip: #262730;
       --bg-tab: #1f2027;
       --txt-main: #ffffff;
       --txt-soft: #c4c4d0;
@@ -67,6 +66,11 @@
       position: absolute;
       inset: 0;
       z-index: 1;
+    }
+
+    /* чтобы круги heatmap точно были поверх */
+    .leaflet-overlay-pane svg {
+      z-index: 400 !important;
     }
 
     /* ========= BOTTOM UI ========= */
@@ -140,41 +144,9 @@
       font-size: 13px;
     }
 
+    /* чипы категорий убираем из интерфейса */
     .categories-row {
-      display: flex;
-      gap: 6px;
-      overflow-x: auto;
-      scrollbar-width: none;
-      margin-bottom: 8px;
-    }
-    .categories-row::-webkit-scrollbar { display: none; }
-
-    .chip {
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: var(--bg-chip);
-      color: var(--txt-soft);
-      border: 1px solid rgba(255,255,255,0.1);
-      font-size: 11px;
-      white-space: nowrap;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-    }
-
-    .chip.active {
-      background: linear-gradient(145deg, #ff7b5f, #ff2140);
-      border: none;
-      color: #fff;
-      font-weight: 600;
-    }
-
-    .chip-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 999px;
-      background: #fff3;
+      display: none;
     }
 
     .banner {
@@ -267,7 +239,6 @@
       margin-bottom: 8px;
     }
 
-    /* градиентные карточки, как в фигме */
     .guide-place-card {
       border-radius: 18px;
       padding: 10px 12px;
@@ -401,7 +372,7 @@
       margin-bottom: 4px;
     }
 
-    /* Locate button без эмодзи */
+    /* Locate button */
     .btn-locate {
       position: absolute;
       right: 16px;
@@ -417,7 +388,7 @@
       color: #fff;
     }
 
-    /* Панель категорий кэшбэка (таб "Категории") */
+    /* Панель категорий кешбэка (подкладка) */
 
     .cashback-panel-backdrop {
       position: absolute;
@@ -517,7 +488,6 @@
       <div class="tabs-row">
         <div class="tab active" data-tab="cashback">Ваш кэшбэк</div>
         <div class="tab" data-tab="nearby">Рядом с вами</div>
-        <div class="tab" data-tab="categories">Категории</div>
       </div>
 
       <div class="search-row">
@@ -643,7 +613,7 @@ let guidePlaces = [];
 let currentStepIndex = 0;
 let heatMode = false;
 
-/* ========= MAP INIT (CARTO DARK) ========= */
+/* ========= MAP INIT ========= */
 
 const map = L.map("map").setView([55.75, 37.62], 11);
 
@@ -651,8 +621,7 @@ L.tileLayer(
   "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
   {
     maxZoom: 19,
-    attribution:
-      '&copy; OSM & CARTO'
+    attribution: '&copy; OSM & CARTO'
   }
 ).addTo(map);
 
@@ -708,16 +677,8 @@ loadData();
 
 /* ========= UI INIT ========= */
 
-const categoriesFilters = [
-  {key:"all", label:"Все"},
-  {key:"АЗС", label:"АЗС"},
-  {key:"Рестораны и кафе", label:"Рестораны"},
-  {key:"Спорттовары", label:"Спорт"},
-  {key:"Развлечения", label:"Развлечения"}
-];
-
 function initUI() {
-  // tabs
+  // tabs: "Ваш кэшбэк" открывает окно, "Рядом с вами" просто меняет режим
   document.querySelectorAll(".tab").forEach(tab => {
     tab.onclick = () => {
       const key = tab.getAttribute("data-tab");
@@ -725,7 +686,7 @@ function initUI() {
       document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
       tab.classList.add("active");
 
-      if (key === "categories") {
+      if (!heatMode && key === "cashback") {
         openCashbackPanel();
       } else {
         closeCashbackPanel();
@@ -733,11 +694,11 @@ function initUI() {
     };
   });
 
-  renderCategoryChips();
-
   document.querySelector("#searchInput").addEventListener("input", () => {
-    rebuildMarkers();
-    buildGuide();
+    if (!heatMode) {
+      rebuildMarkers();
+      buildGuide();
+    }
   });
 
   document.querySelector("#btnLocate").onclick = () => locate();
@@ -753,7 +714,7 @@ function initUI() {
 
   document.querySelector("#bannerRain").onclick = toggleHeatMode;
 
-  // cashback panel events
+  // cashback panel
   const backdrop = document.querySelector("#cashbackBackdrop");
   backdrop.addEventListener("click", e => {
     if (e.target === backdrop) closeCashbackPanel();
@@ -764,42 +725,19 @@ function initUI() {
       document.querySelectorAll(".cashback-item[data-cb]").forEach(i=>i.classList.remove("active"));
       item.classList.add("active");
       activeCashbackCategory = item.getAttribute("data-cb");
-      // в MVP просто визуальное, можно позже добавить логику
+      // Тут можно привязать к брендам/типам, пока только визуально
     };
-  });
-}
-
-function renderCategoryChips() {
-  const row = document.querySelector("#categoriesRow");
-  row.innerHTML = "";
-  categoriesFilters.forEach(cf => {
-    const chip = document.createElement("div");
-    chip.className = "chip" + (activeCategory === cf.key ? " active" : "");
-    const dot = document.createElement("div");
-    dot.className = "chip-dot";
-    dot.style.background = cf.key === "all" ? "#fff3" : catColor(cf.key);
-    chip.appendChild(dot);
-    chip.appendChild(document.createTextNode(cf.label));
-    chip.onclick = () => {
-      activeCategory = cf.key;
-      renderCategoryChips();
-      rebuildMarkers();
-      buildGuide();
-    };
-    row.appendChild(chip);
   });
 }
 
 /* ========= CASHBACK PANEL ========= */
 
 function openCashbackPanel() {
-  const bd = document.querySelector("#cashbackBackdrop");
-  bd.style.display = "flex";
+  document.querySelector("#cashbackBackdrop").style.display = "flex";
 }
 
 function closeCashbackPanel() {
-  const bd = document.querySelector("#cashbackBackdrop");
-  bd.style.display = "none";
+  document.querySelector("#cashbackBackdrop").style.display = "none";
 }
 
 /* ========= FILTERED PLACES ========= */
@@ -807,9 +745,8 @@ function closeCashbackPanel() {
 function filterPlacesBasic() {
   const q = document.querySelector("#searchInput").value.toLowerCase();
   return allPlaces.filter(p => {
-    const okCat = activeCategory === "all" || p.category === activeCategory;
     const okQ = !q || p.name.toLowerCase().includes(q);
-    return okCat && okQ;
+    return okQ;
   });
 }
 
@@ -852,37 +789,53 @@ function buildHeatLayer() {
       z.value >= 35 ? "#ff3859" :
       z.value >= 25 ? "#ff9f30" : "#29d9a6";
 
-    const circle = L.circle([z.lat,z.lon],{
-      radius: 400 + z.value * 6,
+    L.circle([z.lat,z.lon],{
+      radius: 900 + z.value * 20,
       color,
       fillColor: color,
-      fillOpacity: 0.18,
+      fillOpacity: 0.28,
       weight: 1.2
-    }).addTo(heatLayer);
-
-    circle.bindPopup(`Средний кэшбэк: ${z.value} ₽`);
+    }).addTo(heatLayer)
+      .bindPopup(`Средний кэшбэк: ${z.value} ₽`);
   });
 }
 
-function toggleHeatMode() {
-  heatMode = !heatMode;
+function enterHeatMode() {
+  heatMode = true;
+  map.addLayer(heatLayer);
+  markersLayer.clearLayers();
 
-  if (heatMode) {
-    map.addLayer(heatLayer);
-    markersLayer.clearLayers();
-    document.querySelector("#guideTitle").textContent =
-      "Средний кэшбэк по районам";
-    document.querySelector("#guideSubtitle").textContent =
-      "Нажмите на область, чтобы увидеть размер среднего кэшбэка.";
-    document.querySelector("#placeName").textContent = "";
-    document.querySelector("#placeAddress").textContent = "";
-    document.querySelector("#placeCategory").textContent = "";
-    document.querySelector("#placeDistance").textContent = "";
-    document.querySelector("#placeAvgCheck").textContent = "";
+  document.querySelector(".tabs-row").style.display = "none";
+  document.querySelector(".search-row").style.display = "none";
+  document.querySelector("#bannerRain").style.display = "none";
+
+  document.querySelector("#guideSteps").style.display = "none";
+  document.querySelector("#guidePlaceCard").style.display = "none";
+
+  document.querySelector("#guideTitle").textContent = "Средний кешбэк по районам";
+  document.querySelector("#guideSubtitle").textContent =
+    "Нажмите на область, чтобы увидеть размер среднего кешбэка.";
+}
+
+function exitHeatMode() {
+  heatMode = false;
+  map.removeLayer(heatLayer);
+  rebuildMarkers();
+  buildGuide();
+
+  document.querySelector(".tabs-row").style.display = "flex";
+  document.querySelector(".search-row").style.display = "flex";
+  document.querySelector("#bannerRain").style.display = "flex";
+
+  document.querySelector("#guideSteps").style.display = "flex";
+  document.querySelector("#guidePlaceCard").style.display = "flex";
+}
+
+function toggleHeatMode() {
+  if (!heatMode) {
+    enterHeatMode();
   } else {
-    map.removeLayer(heatLayer);
-    rebuildMarkers();
-    buildGuide();
+    exitHeatMode();
   }
 }
 
@@ -895,7 +848,7 @@ function buildGuide() {
   const baseLon = userPosition ? userPosition.lon : 37.62;
 
   const filtered = filterPlacesBasic()
-    .filter(p => p.category === "Рестораны и кафе") // только рестораны
+    .filter(p => p.category === "Рестораны и кафе")
     .map(p => ({
       ...p,
       dist: haversine(baseLat,baseLon,p.lat,p.lon)
@@ -908,8 +861,8 @@ function buildGuide() {
 }
 
 function renderGuide() {
-  const steps = document.querySelector("#guideSteps");
-  steps.innerHTML = "";
+  const stepsEl = document.querySelector("#guideSteps");
+  stepsEl.innerHTML = "";
 
   guidePlaces.forEach((p,i)=>{
     const s = document.createElement("div");
@@ -921,11 +874,11 @@ function renderGuide() {
       map.flyTo([p.lat,p.lon],15,{duration:0.5});
       showDetail(p);
     };
-    steps.appendChild(s);
+    stepsEl.appendChild(s);
     if (i < guidePlaces.length - 1) {
       const line = document.createElement("div");
       line.className = "step-line";
-      steps.appendChild(line);
+      stepsEl.appendChild(line);
     }
   });
 
@@ -933,7 +886,7 @@ function renderGuide() {
   if (!p) {
     document.querySelector("#guideTitle").textContent = "Нет ресторанов поблизости";
     document.querySelector("#guideSubtitle").textContent =
-      "Измените фильтры или попробуйте позже.";
+      "Измените поиск или попробуйте позже.";
     return;
   }
 
@@ -942,7 +895,6 @@ function renderGuide() {
   document.querySelector("#guideSubtitle").textContent =
     "Мы подобрали места с кэшбэком рядом с вами.";
 
-  // градиент по размеру кешбэка
   const card = document.querySelector("#guidePlaceCard");
   card.classList.remove("grad-low","grad-mid","grad-high");
   if (p.cashback >= 6) card.classList.add("grad-high");
@@ -999,7 +951,7 @@ function locate() {
         fillOpacity: 0.9
       }).addTo(map);
     } else {
-      userMarker.setLatLng([userPosition.lat,userPosition.lon]);
+      userMarker.setLatLng([userPosition.lat, userPosition.lon]);
     }
     map.setView([userPosition.lat,userPosition.lon], 13);
     buildGuide();
@@ -1008,4 +960,3 @@ function locate() {
 </script>
 </body>
 </html>
-
