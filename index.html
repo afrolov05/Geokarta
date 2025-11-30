@@ -1,1 +1,713 @@
-<!-- index placeholder -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Geo Cashback MVP</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+  <style>
+    :root {
+      --bg-main: #05060a;
+      --bg-shell: #05060a;
+      --bg-card: #15161c;
+      --bg-card-soft: #1d1e25;
+      --bg-chip: #262730;
+      --txt-main: #ffffff;
+      --txt-soft: #c4c4d0;
+      --txt-muted: #8f90a0;
+      --radius-xl: 26px;
+      --radius-l: 20px;
+      --radius-m: 14px;
+      --radius-s: 10px;
+      --accent-red: #ff3859;
+      --accent-orange: #ff9f30;
+      --accent-lime: #29d9a6;
+      --accent-purple: #7c5cff;
+    }
+
+    * {
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
+      font-family:system-ui, -apple-system, "SF Pro Display", sans-serif;
+    }
+
+    body {
+      background:#05060a;
+      color:white;
+      height:100vh;
+      min-width:390px;
+      overflow:hidden;
+      display:flex;
+      justify-content:center;
+    }
+
+    .app-shell {
+      position:relative;
+      width:100%;
+      max-width:430px;
+      height:100vh;
+      background:var(--bg-shell);
+      overflow:hidden;
+    }
+
+    @media(min-width:768px){
+      .app-shell {
+        margin:16px auto;
+        height:calc(100vh - 32px);
+        border-radius:30px;
+      }
+    }
+
+    #map {
+      position:absolute;
+      inset:0;
+      z-index:1;
+    }
+
+    .top-panel {
+      position:absolute;
+      left:0; right:0; top:0;
+      z-index:3;
+      padding:10px 12px 6px;
+      background:linear-gradient(to bottom, rgba(5,6,10,0.9), rgba(5,6,10,0.6), transparent);
+      pointer-events:none;
+    }
+
+    .top-inner { pointer-events:auto; }
+
+    .filters-row {
+      display:flex;
+      gap:6px;
+      overflow-x:auto;
+      padding-bottom:4px;
+      scrollbar-width:none;
+      margin-bottom:8px;
+    }
+    .filters-row::-webkit-scrollbar { display:none; }
+
+    .chip {
+      padding:7px 12px;
+      font-size:12px;
+      border-radius:999px;
+      background:#262730;
+      color:#d4d4dd;
+      border:1px solid rgba(255,255,255,0.15);
+      white-space:nowrap;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      gap:6px;
+    }
+
+    .chip.active{
+      background:radial-gradient(circle at 30% 0%, #ffcf8a, #ff2140);
+      border:none;
+      color:#1d0b0b;
+      font-weight:600;
+    }
+
+    .chip-dot{
+      width:6px; height:6px;
+      border-radius:999px;
+      background:#eee;
+    }
+
+    .search-row-top{
+      flex:1;
+      display:flex;
+      align-items:center;
+      background:#1d1e25;
+      border-radius:999px;
+      padding:8px 12px;
+    }
+
+    .search-row-top input{
+      flex:1;
+      border:none;
+      outline:none;
+      background:transparent;
+      color:white;
+      font-size:13px;
+    }
+
+    .search-icon{
+      opacity:0.8;
+      margin-right:6px;
+    }
+
+    .toggle-row {
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+
+    .toggle-heat{
+      display:flex;
+      align-items:center;
+      gap:4px;
+      padding:7px 10px;
+      border-radius:999px;
+      background:rgba(28,29,36,0.96);
+      border:1px solid rgba(255,255,255,0.15);
+      font-size:11px;
+      cursor:pointer;
+      color:#ddd;
+    }
+
+    .toggle-heat.active{
+      background:radial-gradient(circle at 30% 0%, #ffecb7, #ff9f30);
+      color:#1b1205;
+      border:none;
+    }
+
+    /* Bottom panel (guide) */
+    .bottom-panel{
+      position:absolute;
+      left:0; right:0; bottom:0;
+      z-index:3;
+      padding:12px 14px 16px;
+      background:linear-gradient(to top, rgba(4,5,9,0.94), rgba(4,5,9,0.7), transparent);
+      pointer-events:none;
+    }
+
+    .card {
+      pointer-events:auto;
+      background:var(--bg-card);
+      border-radius:26px;
+      padding:14px 16px;
+      border:1px solid rgba(255,255,255,0.04);
+    }
+
+    .guide-steps{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:6px;
+      margin:8px 0;
+    }
+
+    .step{
+      width:26px; height:26px;
+      border-radius:999px;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      border:1.6px solid rgba(255,255,255,0.18);
+      color:#c4c4d0;
+      cursor:pointer;
+      background:#1a1b23;
+      font-size:12px;
+    }
+
+    .step.active{
+      background:radial-gradient(circle at 30% 0%, #ff7b5f, #ff2140);
+      border:none;
+      color:white;
+      font-weight:600;
+    }
+
+    .step-line{
+      flex:1;
+      height:1.6px;
+      background:rgba(255,255,255,0.15);
+    }
+
+    /* Detail card (NEW) */
+    .place-detail-wrapper{
+      position:absolute;
+      left:0; right:0; bottom:0;
+      z-index:999;
+      display:none;
+      pointer-events:none;
+      padding:0 14px 20px;
+      background:linear-gradient(to top, rgba(5,6,10,0.95), rgba(5,6,10,0.6), transparent);
+    }
+
+    .place-detail{
+      pointer-events:auto;
+      background:#15161c;
+      border-radius:26px;
+      padding:16px;
+      transform:translateY(40px);
+      opacity:0;
+      transition:0.28s ease;
+      border:1px solid rgba(255,255,255,0.05);
+    }
+
+    .place-detail.show{
+      transform:translateY(0);
+      opacity:1;
+    }
+
+    .detail-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:12px;
+    }
+
+    .detail-logo{
+      width:48px;
+      height:48px;
+      border-radius:14px;
+      object-fit:contain;
+      background:#2a2b33;
+    }
+
+    .detail-close{
+      font-size:22px;
+      cursor:pointer;
+      opacity:0.8;
+    }
+
+    .detail-title{
+      font-size:17px;
+      font-weight:600;
+    }
+
+    .detail-category{
+      font-size:12px;
+      padding:4px 10px;
+      border-radius:999px;
+      display:inline-block;
+      margin:6px 0;
+    }
+
+    .detail-row{
+      font-size:13px;
+      color:#d5d5e1;
+      margin:4px 0;
+    }
+
+    .btn-locate{
+      position:absolute;
+      right:16px;
+      bottom:210px;
+      z-index:3;
+      width:44px;
+      height:44px;
+      border-radius:999px;
+      background:radial-gradient(circle at 30% 0%, #4bffe5, #1b1c24);
+      border:none;
+      cursor:pointer;
+      font-size:18px;
+    }
+  </style>
+</head>
+
+<body>
+<div class="app-shell">
+
+  <div id="map"></div>
+
+  <div class="top-panel">
+    <div class="top-inner">
+
+      <div id="filtersRow" class="filters-row"></div>
+
+      <div class="toggle-row">
+        <div class="search-row-top">
+          <span class="search-icon">🔍</span>
+          <input id="searchInput" placeholder="Поиск" />
+        </div>
+        <button id="toggleHeat" class="toggle-heat">☀ Средний</button>
+      </div>
+    </div>
+  </div>
+
+  <button id="btnLocate" class="btn-locate">📍</button>
+
+  <!-- GUIDE -->
+  <div class="bottom-panel">
+    <div class="card">
+      <div class="guide-steps" id="guideSteps"></div>
+
+      <div class="guide-body-title" id="guideBodyTitle"></div>
+      <div class="guide-body-subtitle" id="guideBodySubtitle"></div>
+
+      <div class="place-card" id="guidePlaceCard">
+        <div class="place-main">
+          <div class="place-name" id="placeName"></div>
+          <div class="place-address" id="placeAddress"></div>
+        </div>
+        <div class="place-meta">
+          <span class="tag" id="placeCategory"></span>
+          <span id="placeDistance"></span>
+          <span id="placeAvgCheck"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DETAIL CARD -->
+  <div class="place-detail-wrapper" id="placeDetailWrap">
+    <div class="place-detail" id="placeDetail">
+      <div class="detail-header">
+        <img id="detailLogo" class="detail-logo" />
+        <span id="detailClose" class="detail-close">×</span>
+      </div>
+
+      <div class="detail-title" id="detailTitle"></div>
+      <div id="detailCategory" class="detail-category"></div>
+
+      <div class="detail-row" id="detailAddress"></div>
+      <div class="detail-row">Средний чек: <span id="detailAvgCheck"></span></div>
+      <div class="detail-row">Кэшбэк: <span id="detailCashback"></span>%</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- JS libs -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+/* ===========================
+   1. GLOBAL STATE
+=========================== */
+
+let allPlaces=[];
+let brandLogos={};
+let activeCategory="all";
+let heatMode=false;
+
+let markersLayer=L.layerGroup();
+let heatLayer=L.layerGroup();
+let markerById=new Map();
+let activePlaceId=null;
+let userPosition=null;
+let userMarker=null;
+
+let guidePlaces=[];
+let currentStepIndex=0;
+
+/* ===========================
+   2. LOAD DATA
+=========================== */
+async function loadData(){
+  const [p,z,b]=await Promise.all([
+    fetch("points.json"),
+    fetch("average-zones.json"),
+    fetch("brands.json")
+  ]);
+
+  allPlaces = await p.json();
+  averageZones = await z.json();
+  brandLogos = await b.json();
+
+  initUI();
+  rebuildMarkers();
+  buildGuide();
+  buildHeatLayer();
+}
+
+loadData();
+
+/* ===========================
+   3. MAP INIT
+=========================== */
+
+const map=L.map("map").setView([55.75,37.62],11);
+
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png")
+  .addTo(map);
+
+markersLayer.addTo(map);
+
+/* ===========================
+   4. HELPERS
+=========================== */
+
+function haversine(a,b,c,d){
+  const R=6371;
+  const dLat=((c-a)*Math.PI)/180;
+  const dLon=((d-b)*Math.PI)/180;
+  const la=a*Math.PI/180;
+  const lc=c*Math.PI/180;
+
+  const h=Math.sin(dLat/2)**2 + Math.cos(la)*Math.cos(lc)*Math.sin(dLon/2)**2;
+  return R*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));
+}
+
+function distFmt(km){
+  if(km<1) return Math.round(km*1000)+" м";
+  return km.toFixed(1)+" км";
+}
+
+function catColor(c){
+  switch(c){
+    case "АЗС": return "#ff3859";
+    case "Рестораны и кафе": return "#ff9f30";
+    case "Спорттовары": return "#29d9a6";
+    case "Развлечения": return "#7c5cff";
+    default: return "#fff";
+  }
+}
+
+/* ===========================
+   5. FILTER UI
+=========================== */
+
+const filters=[
+  {key:"all", name:"Все"},
+  {key:"АЗС", name:"АЗС"},
+  {key:"Рестораны и кафе", name:"Рестораны"},
+  {key:"Спорттовары", name:"Спорт"},
+  {key:"Развлечения", name:"Развлечения"}
+];
+
+function initUI(){
+  renderFilters();
+
+  document.querySelector("#searchInput").addEventListener("input",()=>{
+    rebuildMarkers(); buildGuide();
+  });
+
+  document.querySelector("#toggleHeat").addEventListener("click",()=>{
+    heatMode=!heatMode;
+    toggleHeatMode();
+  });
+
+  document.querySelector("#btnLocate").addEventListener("click",()=> locate(true));
+
+  document.querySelector("#detailClose").onclick=()=>hideDetail();
+}
+
+function renderFilters(){
+  const row=document.querySelector("#filtersRow");
+  row.innerHTML="";
+
+  filters.forEach(f=>{
+    const chip=document.createElement("div");
+    chip.className="chip"+(activeCategory===f.key?" active":"");
+
+    const dot=document.createElement("span");
+    dot.className="chip-dot";
+    if(f.key!=="all") dot.style.background=catColor(f.key);
+
+    chip.appendChild(dot);
+    chip.appendChild(document.createTextNode(f.name));
+
+    chip.onclick=()=>{
+      activeCategory=f.key;
+      renderFilters(); rebuildMarkers(); buildGuide();
+    };
+
+    row.appendChild(chip);
+  });
+}
+
+/* ===========================
+   6. MARKERS
+=========================== */
+
+function rebuildMarkers(){
+  if(heatMode){
+    markersLayer.clearLayers();
+    return;
+  }
+
+  markersLayer.clearLayers();
+  markerById.clear();
+
+  const q=document.querySelector("#searchInput").value.toLowerCase();
+
+  const filtered = allPlaces.filter(p=>{
+    const okCat=(activeCategory==="all"||p.category===activeCategory);
+    const okQ=!q || p.name.toLowerCase().includes(q);
+    return okCat && okQ;
+  });
+
+  filtered.forEach(p=> createMarker(p));
+}
+
+function createMarker(p){
+  const icon=L.divIcon({
+    html:`<div style="
+      width:14px;height:14px;border-radius:999px;
+      background:${catColor(p.category)};
+      border:2px solid #05060a"></div>`,
+    className:"",
+    iconSize:[16,16],
+    iconAnchor:[8,8]
+  });
+
+  const m=L.marker([p.lat,p.lon],{icon}).addTo(markersLayer);
+  markerById.set(p.id,m);
+
+  m.on("click",()=>{
+    activePlaceId=p.id;
+    showDetail(p);
+    map.flyTo([p.lat,p.lon],15,{duration:0.6});
+  });
+}
+
+/* ===========================
+   7. HEATMAP
+=========================== */
+
+function toggleHeatMode(){
+  const btn=document.querySelector("#toggleHeat");
+  if(heatMode){
+    btn.classList.add("active");
+    map.addLayer(heatLayer);
+    markersLayer.clearLayers();
+  } else {
+    btn.classList.remove("active");
+    map.removeLayer(heatLayer);
+    rebuildMarkers();
+  }
+  buildGuide();
+}
+
+function buildHeatLayer(){
+  heatLayer.clearLayers();
+  averageZones.forEach(z=>{
+    L.circle([z.lat,z.lon],{
+      radius:350+z.value*5,
+      color:catColor("АЗС"),
+      fillColor:"#ff3859",
+      fillOpacity:0.1,
+      weight:1.2
+    }).addTo(heatLayer);
+  });
+}
+
+/* ===========================
+   8. GUIDE
+=========================== */
+
+function buildGuide(){
+  if(heatMode){
+    guidePlaces=[];
+    renderGuide();
+    return;
+  }
+
+  const q=document.querySelector("#searchInput").value.toLowerCase();
+  const filtered = allPlaces.filter(p=>{
+    const okCat=(activeCategory==="all"||p.category===activeCategory);
+    const okQ=!q || p.name.toLowerCase().includes(q);
+    return okCat && okQ;
+  });
+
+  const baseLat=userPosition?userPosition.lat:55.75;
+  const baseLon=userPosition?userPosition.lon:37.62;
+
+  const sorted=filtered.map(p=>({
+    ...p,
+    dist:haversine(baseLat,baseLon,p.lat,p.lon)
+  })).sort((a,b)=>a.dist-b.dist);
+
+  guidePlaces=sorted.slice(0,5);
+  currentStepIndex=0;
+  renderGuide();
+}
+
+function renderGuide(){
+  const steps=document.querySelector("#guideSteps");
+  steps.innerHTML="";
+
+  if(heatMode){
+    document.querySelector("#guideBodyTitle").textContent="Средний кэшбэк по районам";
+    document.querySelector("#guideBodySubtitle").textContent="Кликай по кругам на карте";
+    return;
+  }
+
+  guidePlaces.forEach((p,i)=>{
+    const s=document.createElement("div");
+    s.className="step"+(i===currentStepIndex?" active":"");
+    s.textContent=i+1;
+    s.onclick=()=>{
+      currentStepIndex=i;
+      renderGuide();
+      map.flyTo([p.lat,p.lon],15,{duration:0.5});
+      showDetail(p);
+    };
+    steps.appendChild(s);
+    if(i<guidePlaces.length-1){
+      const line=document.createElement("div");
+      line.className="step-line";
+      steps.appendChild(line);
+    }
+  });
+
+  const p=guidePlaces[currentStepIndex];
+  if(!p) return;
+
+  document.querySelector("#placeName").textContent=p.name;
+  document.querySelector("#placeAddress").textContent=p.address;
+  document.querySelector("#placeCategory").textContent=p.category;
+  document.querySelector("#placeDistance").textContent=distFmt(p.dist);
+  document.querySelector("#placeAvgCheck").textContent="~"+p.avgCheck+" ₽";
+}
+
+/* ===========================
+   9. DETAIL CARD
+=========================== */
+
+function showDetail(p){
+  const wrap=document.querySelector("#placeDetailWrap");
+  const card=document.querySelector("#placeDetail");
+
+  document.querySelector("#detailLogo").src=
+    brandLogos[p.brand] || "placeholder.png";
+
+  document.querySelector("#detailTitle").textContent=p.name;
+  document.querySelector("#detailCategory").textContent=p.category;
+  document.querySelector("#detailCategory").style.background=catColor(p.category);
+
+  document.querySelector("#detailAddress").textContent=p.address;
+  document.querySelector("#detailAvgCheck").textContent=p.avgCheck+" ₽";
+  document.querySelector("#detailCashback").textContent=p.cashback;
+
+  wrap.style.display="block";
+
+  setTimeout(()=> card.classList.add("show"),10);
+}
+
+function hideDetail(){
+  const wrap=document.querySelector("#placeDetailWrap");
+  const card=document.querySelector("#placeDetail");
+
+  card.classList.remove("show");
+
+  setTimeout(()=> wrap.style.display="none",250);
+}
+
+/* ===========================
+   10. GEOLOCATION
+=========================== */
+
+function locate(center=true){
+  if(!navigator.geolocation) return;
+
+  navigator.geolocation.getCurrentPosition(pos=>{
+    userPosition={lat:pos.coords.latitude, lon:pos.coords.longitude};
+
+    if(!userMarker){
+      userMarker=L.circleMarker([userPosition.lat,userPosition.lon],{
+        radius:6,
+        color:"#00ffb3",
+        fillOpacity:0.9
+      }).addTo(map);
+    } else {
+      userMarker.setLatLng([userPosition.lat,userPosition.lon]);
+    }
+
+    if(center) map.setView([userPosition.lat,userPosition.lon],14);
+
+    buildGuide();
+
+  });
+}
+
+</script>
+</body>
+</html>
