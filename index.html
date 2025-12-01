@@ -1,80 +1,80 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <title>Геокарта</title>
+  <meta charset="UTF-8" />
+  <title>Геокарта кэшбэка</title>
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
   <!-- Leaflet -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
 
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
+  <div id="map"></div>
 
-<div id="map"></div>
+  <!-- Нижняя панель (bottom sheet) -->
+  <div id="bottomSheet" class="sheet">
+    <div class="sheet-handle"></div>
 
-<!-- BOTTOM SHEET -->
-<div id="bottomSheet" class="sheet">
-
-  <!-- handle -->
-  <div class="sheet-handle"></div>
-
-  <!-- поиск -->
-  <div class="search-box">
-    <input type="text" id="searchInput" placeholder="Поиск">
-  </div>
-
-  <!-- Табы -->
-  <div class="tabs">
-    <button id="tabCashback" class="tab active">Ваш кэшбэк</button>
-    <button id="tabNear" class="tab">Рядом с вами</button>
-  </div>
-
-  <!-- Баннеры -->
-  <div class="banners">
-    <div id="bannerGuide" class="banner guide">
-      <span class="title">Гид по району</span>
-      <span class="subtitle">Выберем кафе и рестораны рядом с вами</span>
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Поиск" />
     </div>
 
-    <div id="bannerRain" class="banner rain">
-      <span class="title">Ожидаются осадки в виде кэшбэка</span>
-      <span class="subtitle">Точки рядом с высоким процентом</span>
+    <div class="tabs">
+      <button id="tabCashback" class="tab active">Ваш кэшбэк</button>
+      <button id="tabNear" class="tab">Рядом с вами</button>
     </div>
+
+    <div class="banners">
+      <button id="bannerGuide" class="banner guide">
+        <div class="banner-title">Гид по району</div>
+        <div class="banner-subtitle">Выберем кафе и рестораны рядом с вами</div>
+      </button>
+
+      <button id="bannerRain" class="banner rain">
+        <div class="banner-title">Ожидаются осадки в виде кэшбэка</div>
+        <div class="banner-subtitle">Точки рядом с высоким процентом</div>
+      </button>
+    </div>
+
+    <div id="pointsList" class="points-list"></div>
   </div>
 
-  <!-- Список точек -->
-  <div id="pointsList"></div>
+  <!-- Экран "Гид по району" -->
+  <div id="guideScreen" class="modal-screen hidden">
+    <div class="modal-header">
+      <button id="guideBack" class="back-btn">←</button>
+      <span class="modal-title">Гид по району</span>
+    </div>
 
-</div>
-
-<!-- ЭКРАН ГИДА -->
-<div id="guideScreen" class="modal-screen hidden">
-  <div class="modal-header">
-    <button id="guideBack" class="back-btn">←</button>
-    <span>Гид по району</span>
+    <div id="guideProgress" class="progress-bar"></div>
+    <div id="guideContent" class="modal-content"></div>
   </div>
 
-  <div id="guideProgress" class="progress"></div>
+  <!-- Экран "Осадки кэшбэка" -->
+  <div id="rainScreen" class="modal-screen hidden">
+    <div class="modal-header">
+      <button id="rainBack" class="back-btn">←</button>
+      <span class="modal-title">Осадки кэшбэка</span>
+    </div>
 
-  <div id="guideContent"></div>
-</div>
-
-<!-- ЭКРАН ОСАДКОВ -->
-<div id="rainScreen" class="modal-screen hidden">
-  <div class="modal-header">
-    <button id="rainBack" class="back-btn">←</button>
-    <span>Осадки кэшбэка</span>
+    <div id="rainContent" class="modal-content"></div>
   </div>
 
-  <div id="rainContent"></div>
-</div>
-
-<script src="places.js"></script>
-<script src="app.js"></script>
-
+  <script src="places.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
