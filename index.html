@@ -1,59 +1,61 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <title>Геокарта</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Geokarta</title>
 
-  <!-- Leaflet -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Leaflet -->
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <!-- Our Styles -->
-  <link rel="stylesheet" href="style.css">
-
-  <!-- Data -->
-  <script src="places.js"></script>
+    <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
 
-<div id="map"></div>
+    <!-- Карта -->
+    <div id="map"></div>
 
-<!-- Нижняя панель -->
-<div id="bottomPanel">
-  <div class="panel-grabber"></div>
+    <!-- Нижняя панель -->
+    <div id="bottomPanel">
 
-  <div class="searchBox">
-    <input type="text" id="searchInput" placeholder="Поиск">
-  </div>
+        <!-- Поиск -->
+        <div class="searchBox">
+            <img src="https://img.icons8.com/ios-filled/50/FFFFFF/search.png" class="searchIcon" />
+            <input id="searchInput" type="text" placeholder="Поиск">
+        </div>
 
-  <div class="filterRow">
-    <button class="filterButton active" id="filterCashback">Ваш кэшбэк</button>
-    <button class="filterButton" id="filterNear">Рядом с вами</button>
-  </div>
+        <!-- Фильтры -->
+        <div class="filters">
+            <button class="filter active" id="filterCashback">Ваш кэшбэк</button>
+            <button class="filter" id="filterNear">Рядом с вами</button>
+        </div>
 
-  <div id="guideBlock">
-    <div class="guideHeader">Гид по району ></div>
-    <div class="guideSteps">
-      <div class="step">1</div>
-      <div class="step">2</div>
-      <div class="step">3</div>
-      <div class="step">4</div>
-      <div class="step">5</div>
+        <!-- Гид по району -->
+        <div class="guideBlock">
+            <div class="guideHeader">
+                Гид по району
+            </div>
+            <div class="guideSteps">
+                <div class="gStep">1</div>
+                <div class="gStep">2</div>
+                <div class="gStep">3</div>
+                <div class="gStep">4</div>
+                <div class="gStep">5</div>
+            </div>
+            <div id="guideList"></div>
+        </div>
+
+        <!-- Список точек -->
+        <div id="placesList"></div>
+
     </div>
-  </div>
 
-  <div class="banner">
-    <div class="bannerIcon">%</div>
-    <div class="bannerText">
-      <b>Ожидаются осадки в виде кэшбэка</b><br>
-      Точки рядом с высоким процентом
-    </div>
-  </div>
-
-  <div id="placesList"></div>
-</div>
-
-<script src="app.js"></script>
+    <script src="places.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
