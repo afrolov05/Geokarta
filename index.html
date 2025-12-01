@@ -1,121 +1,80 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <title>Геокарта кэшбэка</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-    crossorigin=""
-  />
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Геокарта</title>
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-  <div id="app-root">
-    <div id="map"></div>
 
-    <div class="bottom-sheet" id="bottomSheet">
-      <div class="bottom-sheet__handle"></div>
+<div id="map"></div>
 
-      <!-- MAIN PANEL -->
-      <div id="mainPanel" class="panel panel--active">
-        <div class="search-row">
-          <span class="search-row__icon">🔍</span>
-          <input
-            id="searchInput"
-            type="text"
-            placeholder="Поиск"
-            autocomplete="off"
-          />
-        </div>
+<!-- BOTTOM SHEET -->
+<div id="bottomSheet" class="sheet">
 
-        <div class="tabs-row">
-          <button class="tab tab--active" data-tab="cashback">Ваш кэшбэк</button>
-          <button class="tab" data-tab="near">Рядом с вами</button>
-        </div>
+  <!-- handle -->
+  <div class="sheet-handle"></div>
 
-        <div class="banners">
-          <button id="guideBanner" class="banner banner--guide">
-            <div class="banner__title">Гид по району</div>
-            <div class="banner__subtitle">
-              Выберем кафе и рестораны рядом с вами
-            </div>
-          </button>
+  <!-- поиск -->
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="Поиск">
+  </div>
 
-          <button id="rainBanner" class="banner banner--rain">
-            <div class="banner__icon">%</div>
-            <div class="banner__content">
-              <div class="banner__title">Ожидаются осадки в виде кэшбэка</div>
-              <div class="banner__subtitle">
-                Точки рядом с высоким процентом
-              </div>
-            </div>
-          </button>
-        </div>
+  <!-- Табы -->
+  <div class="tabs">
+    <button id="tabCashback" class="tab active">Ваш кэшбэк</button>
+    <button id="tabNear" class="tab">Рядом с вами</button>
+  </div>
 
-        <div class="section-title">Точки</div>
-        <div id="placesList" class="places-list"></div>
-      </div>
+  <!-- Баннеры -->
+  <div class="banners">
+    <div id="bannerGuide" class="banner guide">
+      <span class="title">Гид по району</span>
+      <span class="subtitle">Выберем кафе и рестораны рядом с вами</span>
+    </div>
 
-      <!-- GUIDE PANEL -->
-      <div id="guidePanel" class="panel panel--hidden">
-        <div class="panel-header">
-          <button id="guideBackBtn" class="icon-btn">←</button>
-          <div class="panel-header__titles">
-            <div class="panel-header__title">Гид по району</div>
-            <div class="panel-header__subtitle">
-              Пять ближайших кафе и ресторанов рядом с вами
-            </div>
-          </div>
-        </div>
-
-        <div id="guideProgress" class="guide-progress"></div>
-
-        <div id="guideBody" class="guide-body">
-          <div class="guide-step-label" id="guideStepLabel">Шаг 1 из 5</div>
-          <div id="guidePlaceCard" class="place-card place-card--large"></div>
-
-          <div class="guide-actions">
-            <button id="guideShowOnMap" class="btn btn--secondary">
-              Показать на карте
-            </button>
-            <button id="guideNextBtn" class="btn btn--primary">
-              Отметить как посещённое
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- CASHBACK RAIN PANEL -->
-      <div id="rainPanel" class="panel panel--hidden">
-        <div class="panel-header">
-          <button id="rainBackBtn" class="icon-btn">←</button>
-          <div class="panel-header__titles">
-            <div class="panel-header__title">Осадки кэшбэка</div>
-            <div class="panel-header__subtitle">
-              Показаны точки с максимальным процентом кэшбэка
-            </div>
-          </div>
-        </div>
-
-        <div class="info-card">
-          Нажмите на любую точку на карте, чтобы увидеть детали места.
-        </div>
-
-        <div class="section-title">Точки с высоким кэшбэком</div>
-        <div id="rainList" class="places-list"></div>
-      </div>
+    <div id="bannerRain" class="banner rain">
+      <span class="title">Ожидаются осадки в виде кэшбэка</span>
+      <span class="subtitle">Точки рядом с высоким процентом</span>
     </div>
   </div>
 
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-    crossorigin=""
-  ></script>
-  <script src="places.js"></script>
-  <script src="app.js"></script>
+  <!-- Список точек -->
+  <div id="pointsList"></div>
+
+</div>
+
+<!-- ЭКРАН ГИДА -->
+<div id="guideScreen" class="modal-screen hidden">
+  <div class="modal-header">
+    <button id="guideBack" class="back-btn">←</button>
+    <span>Гид по району</span>
+  </div>
+
+  <div id="guideProgress" class="progress"></div>
+
+  <div id="guideContent"></div>
+</div>
+
+<!-- ЭКРАН ОСАДКОВ -->
+<div id="rainScreen" class="modal-screen hidden">
+  <div class="modal-header">
+    <button id="rainBack" class="back-btn">←</button>
+    <span>Осадки кэшбэка</span>
+  </div>
+
+  <div id="rainContent"></div>
+</div>
+
+<script src="places.js"></script>
+<script src="app.js"></script>
+
 </body>
 </html>
