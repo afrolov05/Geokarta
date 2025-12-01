@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Geokarta</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+  <div id="map"></div>
+
+  <div class="panel">
+    <div class="handle"></div>
+
+    <input id="search" class="search" placeholder="Поиск" />
+
+    <div class="filters">
+      <button id="filter-cashback">Ваш кешбэк</button>
+      <button id="filter-near">Рядом с вами</button>
+      <button id="filter-categories">Категории</button>
+    </div>
+
+    <div class="guide-block">
+      <div class="guide-title">Гид по району</div>
+      <div class="guide-buttons">
+        <button class="guide-btn" data-num="1">1</button>
+        <button class="guide-btn" data-num="2">2</button>
+        <button class="guide-btn" data-num="3">3</button>
+        <button class="guide-btn" data-num="4">4</button>
+        <button class="guide-btn" data-num="5">5</button>
+      </div>
+    </div>
+
+    <div class="alert">
+      <div class="alert-icon">%</div>
+      <div class="alert-text">Ожидаются осадки в виде кэшбэка</div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="places.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
