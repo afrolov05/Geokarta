@@ -1,198 +1,201 @@
-document.addEventListener("DOMContentLoaded", () => {
-  // ---------- данные ----------
-  const PLACES =
-    window.PLACES && Array.isArray(window.PLACES) && window.PLACES.length
-      ? window.PLACES
-      : [
-          // fallback, если файл places.js не подгрузился
-          {
-            id: "demo1",
-            name: "Демо кафе",
-            category: "Рестораны и кафе",
-            address: "г. Москва, Тверская, д. 1",
-            cashbackPercent: 5,
-            lat: 55.757,
-            lng: 37.615
-          }
-        ];
+/**************
+ * ЗАГРУЗКА ДАННЫХ
+ **************/
+import { PLACES } from './places.js';
 
-  // ---------- карта ----------
-  const map = L.map("map", { zoomControl: false }).setView(
-    [55.7558, 37.6173],
-    11
+/**************
+ * НАСТРОЙКА КАРТЫ (OpenStreetMap + Leaflet)
+ **************/
+
+// Москва центр по умолчанию
+const DEFAULT_LOCATION = [55.751244, 37.618423];
+
+// Создаем карту
+const map = L.map('map', {
+  zoomControl: false,   // убираем крестики увеличения для мобильного UI
+  attributionControl: false
+}).setView(DEFAULT_LOCATION, 12);
+
+// Слой карт OSM
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19
+}).addTo(map);
+
+
+/**************
+ * ДОБАВЛЕНИЕ ТОЧЕК НА КАРТУ
+ **************/
+
+let markersLayer = L.layerGroup().addTo(map);
+
+function renderMarkers() {
+  markersLayer.clearLayers();
+
+  PLACES.forEach(place => {
+    L.marker([place.lat, place.lng])
+      .addTo(markersLayer)
+      .bindPopup(`<b>${place.name}</b><br>${place.address}`);
+  });
+}
+
+renderMarkers();
+
+
+
+/**************
+ * МОБИЛЬНОЕ МЕНЮ (нижняя панель)
+ **************/
+const modal = document.getElementById('districtGuideModal');
+const openGuideBtn = document.getElementById('openDistrictGuide');
+const backBtn = document.getElementById('modalBackBtn');
+const progressSteps = document.getElementById('progressSteps');
+const guidePlaceBox = document.getElementById('guidePlaceBox');
+const nextBtn = document.getElementById('nextPlaceBtn');
+
+let guideRestaurants = [];
+let currentStep = 0;
+
+
+/**************
+ * ФУНКЦИЯ — вычисление расстояния
+ **************/
+function distance(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * Math.PI / 180) *
+    Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) ** 2;
+
+  return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+}
+
+
+/**************
+ * ОПРЕДЕЛЯЕМ БЛИЖАЙШИЕ РЕСТОРАНЫ
+ **************/
+function getNearestRestaurants(userLat, userLng) {
+  const restaurants = PLACES.filter(p => p.category === "Рестораны и кафе");
+
+  const enriched = restaurants.map(r => ({
+    ...r,
+    dist: distance(userLat, userLng, r.lat, r.lng)
+  }));
+
+  enriched.sort((a, b) => a.dist - b.dist);
+
+  return enriched.slice(0, 5);
+}
+
+
+/**************
+ * ОТРИСОВКА ПРОГРЕССА
+ **************/
+function renderProgress() {
+  progressSteps.innerHTML = "";
+
+  guideRestaurants.forEach((_, index) => {
+    const step = document.createElement("div");
+    step.className = "step" + (index === currentStep ? " active" : "");
+    step.innerText = index + 1;
+    progressSteps.appendChild(step);
+  });
+}
+
+
+/**************
+ * ПОКАЗ ЗАВЕДЕНИЯ В МОДАЛЕ
+ **************/
+function renderGuidePlace() {
+  const place = guideRestaurants[currentStep];
+
+  guidePlaceBox.innerHTML = `
+    <b>${place.name}</b><br>
+    <div style="margin-top:4px; opacity:0.8;">${place.address}</div>
+  `;
+
+  // Центровка карты на точке
+  map.setView([place.lat, place.lng], 16);
+}
+
+
+/**************
+ * ОТКРЫТЬ ГИД ПО РАЙОНУ
+ **************/
+openGuideBtn.addEventListener("click", () => {
+  // Получаем геолокацию пользователя
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+
+      guideRestaurants = getNearestRestaurants(lat, lng);
+      currentStep = 0;
+
+      renderProgress();
+      renderGuidePlace();
+
+      modal.classList.remove("hidden");
+
+      map.invalidateSize(); // фикс для отображения карты
+    },
+    () => {
+      // если не дали геолокацию — используем центр Москвы
+      guideRestaurants = getNearestRestaurants(DEFAULT_LOCATION[0], DEFAULT_LOCATION[1]);
+      currentStep = 0;
+
+      renderProgress();
+      renderGuidePlace();
+
+      modal.classList.remove("hidden");
+
+      map.invalidateSize();
+    }
+  );
+});
+
+
+/**************
+ * СЛЕДУЮЩЕЕ ЗАВЕДЕНИЕ
+ **************/
+nextBtn.addEventListener("click", () => {
+  if (currentStep < guideRestaurants.length - 1) {
+    currentStep++;
+    renderProgress();
+    renderGuidePlace();
+  }
+});
+
+
+/**************
+ * КНОПКА НАЗАД
+ **************/
+backBtn.addEventListener("click", () => {
+  modal.classList.add("hidden");
+  map.setView(DEFAULT_LOCATION, 12); // возвращаем карту назад
+});
+
+
+/**************
+ * ПОИСК ПО ИМЕНИ
+ **************/
+const searchInput = document.getElementById('searchInput');
+
+searchInput.addEventListener("input", () => {
+  const query = searchInput.value.toLowerCase();
+
+  const filtered = PLACES.filter(p =>
+    p.name.toLowerCase().includes(query)
   );
 
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 19
-  }).addTo(map);
+  markersLayer.clearLayers();
 
-  let markers = [];
-
-  function renderMarkers(list) {
-    markers.forEach((m) => map.removeLayer(m));
-    markers = [];
-
-    list.forEach((p) => {
-      const marker = L.marker([p.lat, p.lng]).addTo(map);
-      marker.bindPopup(
-        `<b>${p.name}</b><br>${p.address}<br>${p.cashbackPercent}% кэшбэк`
-      );
-      markers.push(marker);
-    });
-  }
-
-  renderMarkers(PLACES);
-
-  // ---------- ссылки на DOM ----------
-  const pointsList = document.getElementById("pointsList");
-  const tabCashback = document.getElementById("tabCashback");
-  const tabNear = document.getElementById("tabNear");
-  const searchInput = document.getElementById("searchInput");
-
-  const bannerGuide = document.getElementById("bannerGuide");
-  const bannerRain = document.getElementById("bannerRain");
-
-  const guideScreen = document.getElementById("guideScreen");
-  const rainScreen = document.getElementById("rainScreen");
-  const guideBack = document.getElementById("guideBack");
-  const rainBack = document.getElementById("rainBack");
-  const guideProgress = document.getElementById("guideProgress");
-  const guideContent = document.getElementById("guideContent");
-  const rainContent = document.getElementById("rainContent");
-
-  // ---------- список точек внизу ----------
-  function renderList(list) {
-    pointsList.innerHTML = "";
-    list.forEach((p) => {
-      const item = document.createElement("div");
-      item.className = "point-item";
-      item.innerHTML = `
-        <div class="point-name">${p.name}</div>
-        <div class="point-address">${p.address}</div>
-        <div class="point-address">${p.cashbackPercent}% кэшбэк</div>
-      `;
-      item.onclick = () => {
-        map.setView([p.lat, p.lng], 15);
-      };
-      pointsList.appendChild(item);
-    });
-  }
-
-  renderList(PLACES);
-
-  // ---------- табы ----------
-  tabCashback.onclick = () => {
-    tabCashback.classList.add("active");
-    tabNear.classList.remove("active");
-    renderList(PLACES);
-    renderMarkers(PLACES);
-  };
-
-  tabNear.onclick = () => {
-    tabNear.classList.add("active");
-    tabCashback.classList.remove("active");
-    // упрощённо: сортируем по расстоянию от центра карты и берём ближайшие 20
-    const center = map.getCenter();
-    const withDist = PLACES.map((p) => ({
-      ...p,
-      dist: Math.hypot(p.lat - center.lat, p.lng - center.lng)
-    }))
-      .sort((a, b) => a.dist - b.dist)
-      .slice(0, 20);
-    renderList(withDist);
-    renderMarkers(withDist);
-  };
-
-  // ---------- поиск ----------
-  searchInput.addEventListener("input", () => {
-    const q = searchInput.value.trim().toLowerCase();
-    const filtered = PLACES.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.address.toLowerCase().includes(q) ||
-        (p.category || "").toLowerCase().includes(q)
-    );
-    renderList(filtered);
-    renderMarkers(filtered);
+  filtered.forEach(place => {
+    L.marker([place.lat, place.lng])
+      .addTo(markersLayer)
+      .bindPopup(`<b>${place.name}</b><br>${place.address}`);
   });
-
-  // ---------- Гид по району ----------
-  bannerGuide.onclick = () => {
-    // берём только рестораны/кафе и 5 ближайших
-    const cafes = PLACES.filter((p) =>
-      (p.category || "").toLowerCase().includes("рест")
-    );
-    const center = map.getCenter();
-    const nearest = cafes
-      .map((p) => ({
-        ...p,
-        dist: Math.hypot(p.lat - center.lat, p.lng - center.lng)
-      }))
-      .sort((a, b) => a.dist - b.dist)
-      .slice(0, 5);
-
-    showGuide(nearest);
-  };
-
-  function showGuide(route) {
-    guideScreen.classList.remove("hidden");
-
-    // прогресс-бар 1–5
-    guideProgress.innerHTML = "";
-    for (let i = 1; i <= 5; i++) {
-      const step = document.createElement("div");
-      step.className = "progress-step" + (i === 1 ? " active" : "");
-      step.textContent = i.toString();
-      guideProgress.appendChild(step);
-    }
-
-    guideContent.innerHTML = "";
-    route.forEach((p, index) => {
-      const card = document.createElement("div");
-      card.className = "place-card";
-      card.innerHTML = `
-        <div class="place-name">${p.name}</div>
-        <div class="place-extra">${p.address}</div>
-        <div class="place-extra">${p.cashbackPercent}% кэшбэк</div>
-      `;
-      card.onclick = () => {
-        map.setView([p.lat, p.lng], 15);
-      };
-      guideContent.appendChild(card);
-    });
-  }
-
-  guideBack.onclick = () => {
-    guideScreen.classList.add("hidden");
-  };
-
-  // ---------- Осадки кэшбэка ----------
-  bannerRain.onclick = () => {
-    rainScreen.classList.remove("hidden");
-    const high = PLACES.filter((p) => p.cashbackPercent >= 7);
-
-    rainContent.innerHTML = "";
-    if (!high.length) {
-      rainContent.textContent = "Нет точек с высоким кэшбэком.";
-      return;
-    }
-
-    high.forEach((p) => {
-      const card = document.createElement("div");
-      card.className = "place-card";
-      card.innerHTML = `
-        <div class="place-name">${p.name}</div>
-        <div class="place-extra">${p.address}</div>
-        <div class="place-extra">${p.cashbackPercent}% кэшбэк</div>
-      `;
-      card.onclick = () => {
-        map.setView([p.lat, p.lng], 15);
-      };
-      rainContent.appendChild(card);
-    });
-  };
-
-  rainBack.onclick = () => {
-    rainScreen.classList.add("hidden");
-  };
 });
