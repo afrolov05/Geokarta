@@ -1,270 +1,102 @@
-(function () {
-  const MOSCOW_CENTER = [55.751244, 37.618423];
+// ==== карта ====
+const map = L.map('map', {
+  zoomControl: false
+}).setView([55.7558, 37.6173], 11);
 
-  const state = {
-    userLocation: null,
-    activeTab: 'cashback', // 'cashback' | 'near'
-    mode: 'main', // 'main' | 'guide' | 'rain'
-    markers: [],
-    guidePlaces: [],
-    guideIndex: 0
-  };
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom: 19
+}).addTo(map);
 
-  const map = L.map('map', {
-    zoomControl: false
-  }).setView(MOSCOW_CENTER, 11);
+// ===== markers =====
+let markers = [];
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '&copy; OpenStreetMap contributors'
-  }).addTo(map);
+function loadMarkers(list = window.PLACES) {
+  markers.forEach(m => map.removeLayer(m));
+  markers = [];
 
-  const mainPanel = document.getElementById('mainPanel');
-  const guidePanel = document.getElementById('guidePanel');
-  const rainPanel = document.getElementById('rainPanel');
+  list.forEach(p => {
+    const m = L.marker([p.lat, p.lng]).addTo(map);
+    m.bindPopup(`<b>${p.name}</b><br>${p.address}<br>${p.cashbackPercent}% кэшбэк`);
+    markers.push(m);
+  });
+}
 
-  const tabs = document.querySelectorAll('.tab');
-  const searchInput = document.getElementById('searchInput');
-  const placesList = document.getElementById('placesList');
-  const guideBanner = document.getElementById('guideBanner');
-  const rainBanner = document.getElementById('rainBanner');
+loadMarkers();
 
-  const guideBackBtn = document.getElementById('guideBackBtn');
-  const guideProgress = document.getElementById('guideProgress');
-  const guideStepLabel = document.getElementById('guideStepLabel');
-  const guidePlaceCard = document.getElementById('guidePlaceCard');
-  const guideShowOnMap = document.getElementById('guideShowOnMap');
-  const guideNextBtn = document.getElementById('guideNextBtn');
+// ====== TABS ======
+const tabCashback = document.getElementById("tabCashback");
+const tabNear = document.getElementById("tabNear");
 
-  const rainBackBtn = document.getElementById('rainBackBtn');
-  const rainList = document.getElementById('rainList');
+tabCashback.onclick = () => {
+  tabCashback.classList.add("active");
+  tabNear.classList.remove("active");
+};
 
-  function renderMarkers(places) {
-    state.markers.forEach(m => map.removeLayer(m));
-    state.markers = [];
+tabNear.onclick = () => {
+  tabNear.classList.add("active");
+  tabCashback.classList.remove("active");
+};
 
-    places.forEach(place => {
-      const marker = L.marker([place.lat, place.lng]).addTo(map);
-      marker.bindPopup(`<b>${place.name}</b><br>${place.address}<br>${place.category}<br>${place.cashbackPercent}% кэшбэк`);
-      state.markers.push(marker);
-    });
+// ====== BANNERS ======
+const bannerGuide = document.getElementById("bannerGuide");
+const bannerRain = document.getElementById("bannerRain");
+
+const guideScreen = document.getElementById("guideScreen");
+const rainScreen = document.getElementById("rainScreen");
+
+document.getElementById("guideBack").onclick = () => {
+  guideScreen.classList.add("hidden");
+};
+
+document.getElementById("rainBack").onclick = () => {
+  rainScreen.classList.add("hidden");
+};
+
+bannerGuide.onclick = openGuide;
+bannerRain.onclick = openRain;
+
+// ===== ГИД ПО РАЙОНУ =====
+function openGuide() {
+  const cafes = window.PLACES.filter(p => p.category.includes("рест") || p.category.includes("каф"));
+  const nearest = cafes.slice(0, 5);
+
+  guideScreen.classList.remove("hidden");
+
+  // progress
+  const progress = document.getElementById("guideProgress");
+  progress.innerHTML = "";
+  for (let i = 1; i <= 5; i++) {
+    const step = document.createElement("div");
+    step.className = "progress-step" + (i === 1 ? " active" : "");
+    step.innerText = i;
+    progress.appendChild(step);
   }
 
-  function createPlaceCard(place) {
-    const div = document.createElement('div');
-    div.className = 'place-card';
-    div.innerHTML = `
-      <div class="place-card__title">${place.name}</div>
-      <div class="place-card__address">${place.address}</div>
-      <div class="place-card__meta">
-        <span>${place.category}</span>
-        <span class="place-card__cashback">${place.cashbackPercent}% кэшбэк</span>
-      </div>
+  // list
+  const content = document.getElementById("guideContent");
+  content.innerHTML = "";
+
+  nearest.forEach((p, i) => {
+    const card = document.createElement("div");
+    card.className = "place-card";
+    card.innerHTML = `
+      <div class="place-name">${p.name}</div>
+      ${p.address}
     `;
-    div.addEventListener('click', () => {
-      map.setView([place.lat, place.lng], 15);
-    });
-    return div;
-  }
-
-  function getDistanceKm(a, b) {
-    const R = 6371;
-    const dLat = (b[0] - a[0]) * Math.PI / 180;
-    const dLng = (b[1] - a[1]) * Math.PI / 180;
-    const lat1 = a[0] * Math.PI / 180;
-    const lat2 = b[0] * Math.PI / 180;
-
-    const sinDLat = Math.sin(dLat / 2);
-    const sinDLng = Math.sin(dLng / 2);
-
-    const aa = sinDLat * sinDLat +
-      sinDLng * sinDLng * Math.cos(lat1) * Math.cos(lat2);
-    const c = 2 * Math.atan2(Math.sqrt(aa), Math.sqrt(1 - aa));
-    return R * c;
-  }
-
-  function getUserCenter() {
-    return state.userLocation || MOSCOW_CENTER;
-  }
-
-  function applyMainFilters() {
-    const q = searchInput.value.trim().toLowerCase();
-    let filtered = window.PLACES.slice();
-
-    if (q) {
-      filtered = filtered.filter(p =>
-        p.name.toLowerCase().includes(q) ||
-        p.address.toLowerCase().includes(q) ||
-        p.category.toLowerCase().includes(q)
-      );
-    }
-
-    if (state.activeTab === 'cashback') {
-      filtered = filtered.filter(p => p.cashbackPercent >= 6);
-    } else if (state.activeTab === 'near') {
-      filtered = filtered
-        .map(p => ({
-          ...p,
-          _dist: getDistanceKm(getUserCenter(), [p.lat, p.lng])
-        }))
-        .sort((a, b) => a._dist - b._dist);
-    }
-
-    renderMarkers(filtered);
-
-    placesList.innerHTML = '';
-    filtered.forEach(p => {
-      placesList.appendChild(createPlaceCard(p));
-    });
-  }
-
-  function switchMode(newMode) {
-    state.mode = newMode;
-
-    mainPanel.classList.remove('panel--active');
-    guidePanel.classList.remove('panel--active');
-    rainPanel.classList.remove('panel--active');
-
-    if (newMode === 'main') {
-      mainPanel.classList.add('panel--active');
-      applyMainFilters();
-    } else if (newMode === 'guide') {
-      guidePanel.classList.add('panel--active');
-    } else if (newMode === 'rain') {
-      rainPanel.classList.add('panel--active');
-    }
-  }
-
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      tabs.forEach(t => t.classList.remove('tab--active'));
-      tab.classList.add('tab--active');
-      state.activeTab = tab.dataset.tab;
-      applyMainFilters();
-    });
+    content.appendChild(card);
   });
+}
 
-  searchInput.addEventListener('input', () => {
-    if (state.mode === 'main') applyMainFilters();
-  });
+// ===== ОСАДКИ =====
+function openRain() {
+  rainScreen.classList.remove("hidden");
 
-  guideBanner.addEventListener('click', () => {
-    const center = getUserCenter();
-    const cafes = window.PLACES.filter(p => p.category === 'Рестораны и кафе')
-      .map(p => ({
-        ...p,
-        _dist: getDistanceKm(center, [p.lat, p.lng])
-      }))
-      .sort((a, b) => a._dist - b._dist)
-      .slice(0, 5);
+  const rainContent = document.getElementById("rainContent");
+  rainContent.innerHTML = "<div>Загрузка точек с высоким кэшбэком...</div>";
 
-    state.guidePlaces = cafes;
-    state.guideIndex = 0;
+  const high = window.PLACES.filter(p => p.cashbackPercent >= 7);
 
-    buildGuideProgress();
-    renderGuideStep();
-    switchMode('guide');
-  });
-
-  function buildGuideProgress() {
-    guideProgress.innerHTML = '';
-    for (let i = 0; i < 5; i++) {
-      const dot = document.createElement('div');
-      dot.className = 'guide-dot';
-      if (i < state.guideIndex) {
-        dot.classList.add('guide-dot--done');
-      } else if (i === state.guideIndex) {
-        dot.classList.add('guide-dot--active');
-      }
-      dot.textContent = i + 1;
-      guideProgress.appendChild(dot);
-    }
-  }
-
-  function renderGuideStep() {
-    const step = state.guideIndex;
-    const place = state.guidePlaces[step];
-
-    guideStepLabel.textContent = `Шаг ${step + 1} из 5`;
-
-    if (!place) {
-      guidePlaceCard.innerHTML = '<div class="place-card__title">Гид завершён 🎉</div>';
-      guideNextBtn.disabled = true;
-      guideShowOnMap.disabled = true;
-      return;
-    }
-
-    guidePlaceCard.innerHTML = `
-      <div class="place-card__title">${place.name}</div>
-      <div class="place-card__address">${place.address}</div>
-      <div class="place-card__meta">
-        <span>${place.category}</span>
-        <span class="place-card__cashback">${place.cashbackPercent}% кэшбэк</span>
-      </div>
-    `;
-
-    guideNextBtn.disabled = false;
-    guideShowOnMap.disabled = false;
-
-    map.setView([place.lat, place.lng], 15);
-  }
-
-  guideShowOnMap.addEventListener('click', () => {
-    const place = state.guidePlaces[state.guideIndex];
-    if (!place) return;
-    map.setView([place.lat, place.lng], 15);
-  });
-
-  guideNextBtn.addEventListener('click', () => {
-    if (state.guideIndex < 4) {
-      state.guideIndex += 1;
-      buildGuideProgress();
-      renderGuideStep();
-    } else {
-      state.guideIndex = 5;
-      buildGuideProgress();
-      renderGuideStep();
-    }
-  });
-
-  guideBackBtn.addEventListener('click', () => {
-    switchMode('main');
-  });
-
-  rainBanner.addEventListener('click', () => {
-    const high = window.PLACES.filter(p => p.cashbackPercent >= 7);
-    rainList.innerHTML = '';
-    high.forEach(p => {
-      rainList.appendChild(createPlaceCard(p));
-    });
-    renderMarkers(high);
-    switchMode('rain');
-  });
-
-  rainBackBtn.addEventListener('click', () => {
-    switchMode('main');
-  });
-
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      pos => {
-        state.userLocation = [pos.coords.latitude, pos.coords.longitude];
-        const userMarker = L.circleMarker(state.userLocation, {
-          radius: 6,
-          color: '#4cc3ff',
-          fillColor: '#4cc3ff',
-          fillOpacity: 1
-        }).addTo(map);
-        userMarker.bindPopup('Вы здесь');
-        map.setView(state.userLocation, 12);
-        applyMainFilters();
-      },
-      () => {
-        applyMainFilters();
-      },
-      { enableHighAccuracy: true, timeout: 5000 }
-    );
-  } else {
-    applyMainFilters();
-  }
-})();
+  rainContent.innerHTML = high.map(p =>
+    `<div class="place-card"><div class="place-name">${p.name}</div>${p.address}</div>`
+  ).join("");
+}
