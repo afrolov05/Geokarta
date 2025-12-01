@@ -2,29 +2,107 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Geokarta</title>
+  <title>Геокарта кешбэка</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+
+  <!-- Leaflet (OpenStreetMap) -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+
   <link rel="stylesheet" href="style.css" />
-  <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU" defer></script>
-
-  <!-- Данные -->
-  <script src="districts.js" defer></script>
-  <script src="places.js" defer></script>
-
-  <!-- Логика карты -->
-  <script src="script.js" defer></script>
 </head>
 <body>
   <div id="app">
-    <aside id="sidebar">
-      <h2>Районы Москвы</h2>
-      <ul id="district-list"></ul>
+    <div id="map"></div>
 
-      <h2>Точки</h2>
-      <ul id="places-list"></ul>
-    </aside>
+    <!-- Bottom sheet -->
+    <section class="bottom-sheet" id="bottom-sheet">
+      <div class="bottom-sheet__handle" id="sheet-toggle"></div>
 
-    <main id="map"></main>
+      <!-- Поиск -->
+      <div class="search-row">
+        <div class="search-input">
+          <span class="search-input__icon">🔍</span>
+          <input
+            id="search"
+            type="text"
+            placeholder="Поиск"
+            autocomplete="off"
+          />
+        </div>
+      </div>
+
+      <!-- Верхние фильтры -->
+      <div class="chips-row">
+        <button class="chip chip--primary chip--active" data-chip="my">
+          Ваш кэшбэк
+        </button>
+        <button class="chip" data-chip="nearby">
+          Рядом с вами
+        </button>
+        <button class="chip" data-chip="category">
+          Категории
+        </button>
+      </div>
+
+      <!-- Фильтр по категориям (показывается, когда активна chip=category) -->
+      <div class="category-filters hidden" id="category-filters">
+        <button class="cat-chip cat-chip--active" data-category="АЗС">АЗС</button>
+        <button class="cat-chip cat-chip--active" data-category="Спорттовары">Спорт</button>
+        <button class="cat-chip cat-chip--active" data-category="Рестораны и кафе">Еда</button>
+      </div>
+
+      <!-- Гид по району -->
+      <div class="card guide-card">
+        <div class="card__header">
+          <div>
+            <div class="card__title">Гид по району</div>
+            <div class="card__subtitle" id="guide-subtitle">
+              Выберите округ, покажем только кафе и рестораны
+            </div>
+          </div>
+          <div class="card__chevron">›</div>
+        </div>
+
+        <div class="guide-districts" id="guide-districts">
+          <!-- Чипы районов генерятся из данных -->
+        </div>
+      </div>
+
+      <!-- Осадки кешбэка -->
+      <button class="card rain-card" id="rain-card">
+        <div class="rain-card__icon">%</div>
+        <div class="rain-card__text">
+          <div class="card__title">Ожидаются осадки в виде кэшбэка</div>
+          <div class="card__subtitle">
+            Показываем места с максимальным процентом
+          </div>
+        </div>
+        <div class="card__chevron">›</div>
+      </button>
+
+      <!-- Список точек -->
+      <div class="places-header">
+        Точки
+        <span class="places-header__count" id="places-count"></span>
+      </div>
+      <div class="places-list" id="places-list">
+        <!-- Заполняется из JS -->
+      </div>
+    </section>
   </div>
+
+  <!-- Скрипты -->
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+  <script src="places.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
