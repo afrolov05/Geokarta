@@ -2,79 +2,103 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <title>Геокарта кэшбэка</title>
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Геокарта</title>
 
   <!-- Leaflet -->
   <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-    crossorigin=""
   />
   <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-    crossorigin=""
-  ></script>
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+  </script>
 
+  <!-- Наши стили -->
   <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
+
+  <!-- КАРТА -->
   <div id="map"></div>
 
-  <!-- Нижняя панель (bottom sheet) -->
-  <div id="bottomSheet" class="sheet">
-    <div class="sheet-handle"></div>
+  <!-- НИЖНЯЯ МОБИЛЬНАЯ ПАНЕЛЬ -->
+  <div id="bottom-panel">
 
+    <!-- Ползунок для имитации iOS -->
+    <div class="grabber"></div>
+
+    <!-- Поиск -->
     <div class="search-box">
-      <input type="text" id="searchInput" placeholder="Поиск" />
+      <input type="text" id="search-input" placeholder="Поиск" />
     </div>
 
-    <div class="tabs">
-      <button id="tabCashback" class="tab active">Ваш кэшбэк</button>
-      <button id="tabNear" class="tab">Рядом с вами</button>
+    <!-- Фильтры (только 2 по Фигме: Ваш кэшбэк + Рядом с вами) -->
+    <div class="filters">
+      <button class="filter-btn active" id="filter-cashback">Ваш кэшбэк</button>
+      <button class="filter-btn" id="filter-nearby">Рядом с вами</button>
     </div>
 
+    <!-- Баннеры -->
     <div class="banners">
-      <button id="bannerGuide" class="banner guide">
-        <div class="banner-title">Гид по району</div>
-        <div class="banner-subtitle">Выберем кафе и рестораны рядом с вами</div>
-      </button>
 
-      <button id="bannerRain" class="banner rain">
-        <div class="banner-title">Ожидаются осадки в виде кэшбэка</div>
-        <div class="banner-subtitle">Точки рядом с высоким процентом</div>
-      </button>
+      <!-- ГИД ПО РАЙОНУ -->
+      <div class="banner" id="banner-guide">
+        <div class="banner-left">
+          <div class="banner-title">Гид по району</div>
+          <div class="banner-sub">Выберем кафе и рестораны рядом с вами</div>
+        </div>
+        <div class="banner-arrow">›</div>
+      </div>
+
+      <!-- ОСАДКИ КЭШБЭКА -->
+      <div class="banner blue" id="banner-rain">
+        <div class="banner-left">
+          <div class="banner-title">Ожидаются осадки в виде кэшбэка</div>
+          <div class="banner-sub">Точки рядом с высоким процентом</div>
+        </div>
+        <div class="banner-arrow">›</div>
+      </div>
+
     </div>
 
-    <div id="pointsList" class="points-list"></div>
   </div>
 
-  <!-- Экран "Гид по району" -->
-  <div id="guideScreen" class="modal-screen hidden">
+  <!-- МОДАЛ: ГИД ПО РАЙОНУ -->
+  <div id="guide-modal" class="modal hidden">
+
     <div class="modal-header">
-      <button id="guideBack" class="back-btn">←</button>
-      <span class="modal-title">Гид по району</span>
+      <button id="guide-back" class="back-btn">←</button>
+      <div class="modal-title">Гид по району</div>
     </div>
 
-    <div id="guideProgress" class="progress-bar"></div>
-    <div id="guideContent" class="modal-content"></div>
-  </div>
+    <div class="modal-content">
 
-  <!-- Экран "Осадки кэшбэка" -->
-  <div id="rainScreen" class="modal-screen hidden">
-    <div class="modal-header">
-      <button id="rainBack" class="back-btn">←</button>
-      <span class="modal-title">Осадки кэшбэка</span>
+      <div class="guide-sub">Пять ближайших кафе и ресторанов рядом с вами.</div>
+
+      <!-- Прогресс бар -->
+      <div class="progress-steps" id="guide-steps">
+        <div class="step active" data-step="1">1</div>
+        <div class="step" data-step="2">2</div>
+        <div class="step" data-step="3">3</div>
+        <div class="step" data-step="4">4</div>
+        <div class="step" data-step="5">5</div>
+      </div>
+
+      <!-- Текущая точка -->
+      <div id="guide-place-box" class="guide-place-box">Загрузка...</div>
+
+      <div class="guide-actions">
+        <button id="guide-show" class="modal-btn">Показать на карте</button>
+        <button id="guide-next" class="modal-btn outlined">Отметить как посещённое</button>
+      </div>
+
     </div>
-
-    <div id="rainContent" class="modal-content"></div>
   </div>
 
+  <!-- Подключаем JS -->
   <script src="places.js"></script>
   <script src="app.js"></script>
+
 </body>
 </html>
