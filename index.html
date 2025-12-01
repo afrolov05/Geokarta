@@ -2,54 +2,29 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <title>Cashback Map</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Geokarta</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU" defer></script>
 
-  <link href="https://api.mapbox.com/mapbox-gl-js/v3.0.0/mapbox-gl.css" rel="stylesheet" />
+  <!-- Данные -->
+  <script src="districts.js" defer></script>
+  <script src="places.js" defer></script>
 
-  <style>
-    body, html {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      font-family: sans-serif;
-    }
-
-    #map {
-      width: 100%;
-      height: 100%;
-    }
-  </style>
+  <!-- Логика карты -->
+  <script src="script.js" defer></script>
 </head>
-
 <body>
-  <div id="map"></div>
+  <div id="app">
+    <aside id="sidebar">
+      <h2>Районы Москвы</h2>
+      <ul id="district-list"></ul>
 
-  <script src="https://api.mapbox.com/mapbox-gl-js/v3.0.0/mapbox-gl.js"></script>
-  <script src="data/places.js"></script>
+      <h2>Точки</h2>
+      <ul id="places-list"></ul>
+    </aside>
 
-  <script>
-    mapboxgl.accessToken = 'ТВОЙ_MAPBOX_TOKEN';
-
-    const map = new mapboxgl.Map({
-      container: 'map',
-      style: 'mapbox://styles/mapbox/light-v11',
-      center: [37.62, 55.75],
-      zoom: 10
-    });
-
-    PLACES.forEach(place => {
-      new mapboxgl.Marker()
-        .setLngLat([place.lng, place.lat])
-        .setPopup(
-          new mapboxgl.Popup().setHTML(
-            `<b>${place.name}</b><br>
-            ${place.category}<br>
-            <small>${place.address}</small><br>
-            Кешбэк: ${place.cashbackPercent}%`
-          )
-        )
-        .addTo(map);
-    });
-  </script>
+    <main id="map"></main>
+  </div>
 </body>
 </html>
