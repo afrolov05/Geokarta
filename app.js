@@ -1,428 +1,363 @@
 // app.js
-// =======================================
-// Geokarta – mobile-first map logic
-// Использует Leaflet + window.PLACES
-// =======================================
+// Ожидается, что PLACES уже загружен из places.js (через <script src="places.js">)
 
-// ---- константы ----
-const MOSCOW_CENTER = [55.751244, 37.618423];
-const NEARBY_RADIUS_METERS = 3000; // для режима "Рядом с вами"
-const HIGH_CASHBACK_THRESHOLD = 7; // "осадки кэшбэка" (>= 7%)
+// ---------------------- ГЛОБАЛЬНОЕ СОСТОЯНИЕ ----------------------
 
-const ALL_PLACES = (window.PLACES || []).slice();
+const MOSCOW_CENTER = [55.7558, 37.6173];
+const MOSCOW_ZOOM = 11;
 
-// ---- состояние интерфейса ----
 let map;
 let markersLayer;
-let currentMode = "cashback"; // "cashback" | "nearby" | "categories"
-let cashbackRainMode = false; // "Осадки кэшбэка"
-let selectedCategories = new Set(); // для режима "Категории"
-let searchQuery = "";
+let userLocation = null;
 
-// состояние "Гид по району"
-let guideSteps = [];      // [{ step, place }]
-let activeGuideStep = 1;  // 1..5
+let currentMode = "cashback"; // 'cashback' | 'nearby' | 'guide'
+let guidePlaces = [];          // 5 ближайших ресторанов
+let currentGuideStep = 1;
+let guideHighlightCircle = null;
 
-// ---- получение ссылок на DOM ----
-const $ = (id) => document.getElementById(id);
+// Кэш DOM-элементов
+const searchInput = document.getElementById("searchInput");
+const filterCashbackBtn = document.getElementById("filterCashbackBtn");
+const filterNearbyBtn = document.getElementById("filterNearbyBtn");
+// фильтр "Категории" больше НЕ используем
 
-const searchInputEl       = $("searchInput");
-const modeCashbackBtn     = $("modeCashbackBtn");
-const modeNearbyBtn       = $("modeNearbyBtn");
-const modeCategoriesBtn   = $("modeCategoriesBtn");
+const guideEntry = document.getElementById("guideEntry");   // карточка "Гид по району"
+const guidePanel = document.getElementById("guidePanel");   // развёрнутый блок гида
+const guideStepsContainer = document.getElementById("guideSteps");
+const guideStepTitle = document.getElementById("guideStepTitle");
+const guideCardName = document.getElementById("guideCardName");
+const guideCardAddress = document.getElementById("guideCardAddress");
+const guideCardCashback = document.getElementById("guideCardCashback");
 
-const cashbackFiltersPanel  = $("cashbackFiltersPanel");
-const categoriesFiltersPanel = $("categoriesFiltersPanel");
+// блок "Осадки кэшбэка" просто как баннер, без логики
+const pointsListContainer = document.getElementById("pointsList");
 
-const guideStepsContainer  = $("guideSteps");
-const guideTitleEl         = $("guideTitle");
-const guidePlaceCardEl     = $("guidePlaceCard");
+// ---------------------- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ----------------------
 
-const cashbackBannerEl     = $("cashbackBanner");
-const placesListEl         = $("placesList");
-
-// элементы чекбоксов фильтров категорий (если есть)
-const categoryCheckboxEls = document.querySelectorAll(
-  'input[name="categoryFilter"]'
-);
-
-// элементы фильтров "Ваш кэшбэк" (если есть – радиокнопки)
-const cashbackFilterEls = document.querySelectorAll(
-  'input[name="cashbackFilter"]'
-);
-
-// ---- инициализация карты ----
-function initMap() {
-  map = L.map("map", {
-    center: MOSCOW_CENTER,
-    zoom: 11,
-    zoomControl: false,
-  });
-
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 19,
-    attribution: "&copy; OpenStreetMap contributors",
-  }).addTo(map);
-
-  markersLayer = L.layerGroup().addTo(map);
-}
-
-// ---- утилиты ----
-function haversineDistanceMeters(lat1, lon1, lat2, lon2) {
-  const R = 6371000; // meters
+// Хаверсин для расстояния (в метрах)
+function distanceMeters(lat1, lon1, lat2, lon2) {
+  const R = 6371000;
   const toRad = (v) => (v * Math.PI) / 180;
-
   const dLat = toRad(lat2 - lat1);
   const dLon = toRad(lon2 - lon1);
   const a =
-    Math.sin(dLat / 2) ** 2 +
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(toRad(lat1)) *
       Math.cos(toRad(lat2)) *
-      Math.sin(dLon / 2) ** 2;
-
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
 
-// ---- фильтрация точек ----
-function getFilteredPlaces() {
-  let places = ALL_PLACES.slice();
-
-  // поиск по тексту
-  if (searchQuery.trim()) {
-    const q = searchQuery.trim().toLowerCase();
-    places = places.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        (p.address && p.address.toLowerCase().includes(q))
-    );
-  }
-
-  // режимы
-  if (currentMode === "nearby") {
-    places = places.filter((p) => {
-      const d = haversineDistanceMeters(
-        MOSCOW_CENTER[0],
-        MOSCOW_CENTER[1],
-        p.lat,
-        p.lng
-      );
-      return d <= NEARBY_RADIUS_METERS;
-    });
-  }
-
-  if (currentMode === "categories" && selectedCategories.size > 0) {
-    places = places.filter((p) =>
-      selectedCategories.has(p.category)
-    );
-  }
-
-  // "Ваш кэшбэк" – доп. фильтр по проценту (если радиокнопки есть)
-  const activeCashbackFilter = Array.from(cashbackFilterEls).find(
-    (el) => el.checked
-  );
-  if (currentMode === "cashback" && activeCashbackFilter) {
-    const value = activeCashbackFilter.value;
-    if (value === "5") {
-      places = places.filter((p) => p.cashbackPercent === 5);
-    } else if (value === "7") {
-      places = places.filter((p) => p.cashbackPercent >= 7);
-    }
-    // value === "all" → не фильтруем
-  }
-
-  // "Осадки кэшбэка" – оставляем только высокий процент
-  if (cashbackRainMode) {
-    places = places.filter(
-      (p) => p.cashbackPercent >= HIGH_CASHBACK_THRESHOLD
-    );
-  }
-
-  return places;
+function formatDistance(meters) {
+  if (meters < 1000) return `${Math.round(meters)} м`;
+  return `${(meters / 1000).toFixed(1)} км`;
 }
 
-// ---- отрисовка маркеров ----
-function renderMarkers() {
-  if (!markersLayer) return;
+// ---------------------- НАСТРОЙКА КАРТЫ ----------------------
 
+function initMap() {
+  map = L.map("map", {
+    center: MOSCOW_CENTER,
+    zoom: MOSCOW_ZOOM,
+    zoomControl: false
+  });
+
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  markersLayer = L.layerGroup().addTo(map);
+
+  // Пытаемся получить геолокацию пользователя
+  if ("geolocation" in navigator) {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        userLocation = {
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude
+        };
+        map.setView([userLocation.lat, userLocation.lng], 13);
+
+        // Рисуем маленький маркер пользователя
+        L.circleMarker([userLocation.lat, userLocation.lng], {
+          radius: 5,
+          color: "#ff3b30",
+          fillColor: "#ff3b30",
+          fillOpacity: 1
+        })
+          .addTo(map)
+          .bindPopup("Вы здесь");
+      },
+      () => {
+        // ничего страшного — останемся в центре Москвы
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 5000
+      }
+    );
+  }
+
+  // Рисуем маркеры для режима "Ваш кэшбэк" по умолчанию
+  renderMarkers(PLACES);
+}
+
+// ---------------------- МАРКЕРЫ ----------------------
+
+const markerById = new Map();
+
+function clearMarkers() {
+  markerById.clear();
   markersLayer.clearLayers();
-  const places = getFilteredPlaces();
+  if (guideHighlightCircle) {
+    map.removeLayer(guideHighlightCircle);
+    guideHighlightCircle = null;
+  }
+}
+
+function renderMarkers(places) {
+  clearMarkers();
 
   places.forEach((place) => {
-    const isHighCashback =
-      place.cashbackPercent >= HIGH_CASHBACK_THRESHOLD;
-
-    const marker = L.circleMarker([place.lat, place.lng], {
-      radius: 7,
-      weight: 2,
-      color: isHighCashback ? "#FF4B4B" : "#1D8DFF",
-      fillColor: isHighCashback ? "#FF8080" : "#1D8DFF",
-      fillOpacity: 0.9,
-    });
-
+    const marker = L.marker([place.lat, place.lng]).addTo(markersLayer);
     marker.bindPopup(
-      `<b>${place.name}</b><br>${place.address}<br><small>${place.category}, ${place.cashbackPercent}% кэшбэк</small>`
+      `<strong>${place.name}</strong><br>${place.address}<br>Кэшбэк: ${place.cashbackPercent}%`
     );
-
-    marker.on("click", () => {
-      focusOnPlace(place);
-      scrollToPlacesListItem(place.id);
-    });
-
-    marker.addTo(markersLayer);
+    markerById.set(place.id, marker);
   });
 }
 
-// ---- список "Точки" ----
-function renderPlacesList() {
-  if (!placesListEl) return;
+// Зеленый подсвет для текущей точки гида
+function highlightGuidePlace(place) {
+  if (!place) return;
+  if (guideHighlightCircle) {
+    map.removeLayer(guideHighlightCircle);
+    guideHighlightCircle = null;
+  }
 
-  const places = getFilteredPlaces();
-  placesListEl.innerHTML = "";
+  guideHighlightCircle = L.circleMarker([place.lat, place.lng], {
+    radius: 14,
+    color: "#2ecc71",
+    fillColor: "#2ecc71",
+    fillOpacity: 0.4,
+    weight: 3
+  }).addTo(map);
 
-  if (!places.length) {
-    const empty = document.createElement("div");
-    empty.className = "places-empty";
-    empty.textContent = "Ничего не нашли по фильтрам 😔";
-    placesListEl.appendChild(empty);
+  map.panTo([place.lat, place.lng]);
+}
+
+// ---------------------- РЕЖИМЫ / ФИЛЬТРЫ ----------------------
+
+function setMode(mode) {
+  currentMode = mode;
+
+  // Сбрасываем визуальное состояние кнопок
+  filterCashbackBtn.classList.remove("active");
+  filterNearbyBtn.classList.remove("active");
+  guideEntry.classList.remove("active");
+  guidePanel.classList.remove("open");
+
+  if (mode === "cashback") {
+    filterCashbackBtn.classList.add("active");
+    renderMarkers(PLACES);
+    renderPointsList(PLACES);
+  }
+
+  if (mode === "nearby") {
+    filterNearbyBtn.classList.add("active");
+    const basePoint = userLocation || {
+      lat: MOSCOW_CENTER[0],
+      lng: MOSCOW_CENTER[1]
+    };
+    const sorted = [...PLACES].sort((a, b) => {
+      const da = distanceMeters(basePoint.lat, basePoint.lng, a.lat, a.lng);
+      const db = distanceMeters(basePoint.lat, basePoint.lng, b.lat, b.lng);
+      return da - db;
+    });
+    const nearest = sorted.slice(0, 20);
+    renderMarkers(nearest);
+    renderPointsList(nearest);
+  }
+
+  if (mode === "guide") {
+    guideEntry.classList.add("active");
+    guidePanel.classList.add("open");
+    prepareGuidePlaces();
+  }
+}
+
+// ---------------------- ГИД ПО РАЙОНУ ----------------------
+
+// выбираем 5 ближайших ресторанов
+function prepareGuidePlaces() {
+  const restaurants = PLACES.filter(
+    (p) => p.category === "Рестораны и кафе"
+  );
+
+  const basePoint = userLocation || {
+    lat: MOSCOW_CENTER[0],
+    lng: MOSCOW_CENTER[1]
+  };
+
+  const sorted = restaurants
+    .map((p) => ({
+      ...p,
+      distance: distanceMeters(basePoint.lat, basePoint.lng, p.lat, p.lng)
+    }))
+    .sort((a, b) => a.distance - b.distance);
+
+  guidePlaces = sorted.slice(0, 5);
+
+  // На карте показываем только эти 5 ресторанов
+  renderMarkers(guidePlaces);
+  renderPointsList(guidePlaces);
+
+  // Обновляем UI полоски шагов и карточки
+  currentGuideStep = 1;
+  updateGuideUI();
+}
+
+function updateGuideUI() {
+  if (!guidePlaces.length) {
+    guideStepTitle.textContent = "Рядом нет ресторанов :(";
+    guideCardName.textContent = "";
+    guideCardAddress.textContent = "";
+    guideCardCashback.textContent = "";
     return;
   }
 
-  places.slice(0, 30).forEach((place) => {
-    const item = document.createElement("button");
-    item.className = "place-card";
-    item.dataset.placeId = place.id;
+  // Обновляем активный кружок 1–5
+  if (guideStepsContainer) {
+    const stepButtons = guideStepsContainer.querySelectorAll("[data-step]");
+    stepButtons.forEach((btn) => {
+      const step = Number(btn.getAttribute("data-step"));
+      if (step === currentGuideStep) {
+        btn.classList.add("active");
+      } else {
+        btn.classList.remove("active");
+      }
+    });
+  }
+
+  const idx = currentGuideStep - 1;
+  const place = guidePlaces[idx] || guidePlaces[guidePlaces.length - 1];
+
+  guideStepTitle.textContent = `${currentGuideStep}. Посетите ${place.name}`;
+  guideCardName.textContent = place.name;
+  guideCardAddress.textContent = place.address;
+  guideCardCashback.textContent = `${place.cashbackPercent}% кэшбэка`;
+
+  highlightGuidePlace(place);
+}
+
+// ---------------------- СПИСОК ТОЧЕК ВНИЗУ ----------------------
+
+function renderPointsList(places) {
+  if (!pointsListContainer) return;
+  pointsListContainer.innerHTML = "";
+
+  places.forEach((place) => {
+    const item = document.createElement("div");
+    item.className = "point-item";
 
     item.innerHTML = `
-      <div class="place-card__main">
-        <div class="place-card__title">${place.name}</div>
-        <div class="place-card__address">${place.address}</div>
-      </div>
-      <div class="place-card__cashback">
-        <span class="place-card__percent">${place.cashbackPercent}%</span>
-      </div>
+      <div class="point-title">${place.name}</div>
+      <div class="point-subtitle">${place.address}</div>
+      <div class="point-meta">${place.category} • ${place.cashbackPercent}% кэшбэка</div>
     `;
 
     item.addEventListener("click", () => {
-      focusOnPlace(place);
-    });
-
-    placesListEl.appendChild(item);
-  });
-}
-
-function focusOnPlace(place) {
-  if (!map) return;
-  map.setView([place.lat, place.lng], 15, { animate: true });
-}
-
-// плавный скролл к элементу списка
-function scrollToPlacesListItem(placeId) {
-  const el = placesListEl?.querySelector(
-    `[data-place-id="${placeId}"]`
-  );
-  if (el && typeof el.scrollIntoView === "function") {
-    el.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  }
-}
-
-// ---- "Гид по району" ----
-function initGuideSteps() {
-  // Берём первые 5 ресторанов
-  const restaurants = ALL_PLACES.filter(
-    (p) => p.category === "Рестораны и кафе"
-  ).slice(0, 5);
-
-  guideSteps = restaurants.map((place, idx) => ({
-    step: idx + 1,
-    place,
-  }));
-
-  if (!guideStepsContainer) return;
-
-  guideStepsContainer.innerHTML = "";
-
-  guideSteps.forEach((stepObj) => {
-    const btn = document.createElement("button");
-    btn.className = "guide-step";
-    btn.dataset.step = String(stepObj.step);
-    btn.textContent = stepObj.step;
-
-    btn.addEventListener("click", () => {
-      setActiveGuideStep(stepObj.step);
-    });
-
-    guideStepsContainer.appendChild(btn);
-  });
-
-  if (guideSteps.length) {
-    setActiveGuideStep(1);
-  }
-}
-
-function setActiveGuideStep(stepNumber) {
-  activeGuideStep = stepNumber;
-
-  if (!guideStepsContainer) return;
-
-  // визуально выделяем кнопку
-  guideStepsContainer
-    .querySelectorAll(".guide-step")
-    .forEach((btn) => {
-      btn.classList.toggle(
-        "guide-step--active",
-        Number(btn.dataset.step) === stepNumber
-      );
-    });
-
-  const stepObj = guideSteps.find(
-    (g) => g.step === stepNumber
-  );
-  if (!stepObj) return;
-
-  const place = stepObj.place;
-
-  // обновляем текст и карточку
-  if (guideTitleEl) {
-    guideTitleEl.textContent = `Шаг ${stepNumber}: посетите ${place.name}`;
-  }
-
-  if (guidePlaceCardEl) {
-    guidePlaceCardEl.innerHTML = `
-      <div class="guide-place__title">${place.name}</div>
-      <div class="guide-place__address">${place.address}</div>
-      <div class="guide-place__cashback">
-        ${place.cashbackPercent}% кэшбэк · ${place.category}
-      </div>
-    `;
-
-    guidePlaceCardEl.onclick = () => focusOnPlace(place);
-  }
-
-  // фокус карты
-  focusOnPlace(place);
-}
-
-// ---- обработчики UI ----
-function setMode(newMode) {
-  currentMode = newMode;
-
-  // переключение активных табов
-  [modeCashbackBtn, modeNearbyBtn, modeCategoriesBtn].forEach(
-    (btn) => {
-      if (!btn) return;
-      const mode = btn.dataset.mode;
-      btn.classList.toggle("mode-tab--active", mode === newMode);
-    }
-  );
-
-  // показать/скрыть панели фильтров
-  if (cashbackFiltersPanel) {
-    cashbackFiltersPanel.style.display =
-      newMode === "cashback" ? "block" : "none";
-  }
-  if (categoriesFiltersPanel) {
-    categoriesFiltersPanel.style.display =
-      newMode === "categories" ? "block" : "none";
-  }
-
-  renderMarkers();
-  renderPlacesList();
-}
-
-function toggleCashbackRain() {
-  cashbackRainMode = !cashbackRainMode;
-
-  if (cashbackBannerEl) {
-    cashbackBannerEl.classList.toggle(
-      "cashback-banner--active",
-      cashbackRainMode
-    );
-
-    const subtitle = cashbackBannerEl.querySelector(
-      ".cashback-banner__subtitle"
-    );
-    if (subtitle) {
-      subtitle.textContent = cashbackRainMode
-        ? "Показываем только точки с высоким кэшбэком"
-        : "Точки рядом с высоким процентом";
-    }
-  }
-
-  renderMarkers();
-  renderPlacesList();
-}
-
-// ---- навешиваем события ----
-function attachEventListeners() {
-  if (searchInputEl) {
-    searchInputEl.addEventListener("input", (e) => {
-      searchQuery = e.target.value || "";
-      renderMarkers();
-      renderPlacesList();
-    });
-  }
-
-  if (modeCashbackBtn) {
-    modeCashbackBtn.dataset.mode = "cashback";
-    modeCashbackBtn.addEventListener("click", () =>
-      setMode("cashback")
-    );
-  }
-  if (modeNearbyBtn) {
-    modeNearbyBtn.dataset.mode = "nearby";
-    modeNearbyBtn.addEventListener("click", () =>
-      setMode("nearby")
-    );
-  }
-  if (modeCategoriesBtn) {
-    modeCategoriesBtn.dataset.mode = "categories";
-    modeCategoriesBtn.addEventListener("click", () =>
-      setMode("categories")
-    );
-  }
-
-  // чекбоксы категорий
-  categoryCheckboxEls.forEach((cb) => {
-    cb.addEventListener("change", () => {
-      selectedCategories = new Set(
-        Array.from(categoryCheckboxEls)
-          .filter((el) => el.checked)
-          .map((el) => el.value)
-      );
-      renderMarkers();
-      renderPlacesList();
-    });
-  });
-
-  // радиокнопки "Ваш кэшбэк"
-  cashbackFilterEls.forEach((rb) => {
-    rb.addEventListener("change", () => {
-      if (currentMode === "cashback") {
-        renderMarkers();
-        renderPlacesList();
+      const marker = markerById.get(place.id);
+      if (marker) {
+        map.setView(marker.getLatLng(), 15);
+        marker.openPopup();
+      }
+      if (currentMode === "guide") {
+        const i = guidePlaces.findIndex((p) => p.id === place.id);
+        if (i >= 0) {
+          currentGuideStep = i + 1;
+          updateGuideUI();
+        }
       }
     });
+
+    pointsListContainer.appendChild(item);
+  });
+}
+
+// ---------------------- ПОИСК ----------------------
+
+function applySearchFilter() {
+  const term = (searchInput.value || "").trim().toLowerCase();
+  let baseList = PLACES;
+
+  if (currentMode === "nearby") {
+    const basePoint = userLocation || {
+      lat: MOSCOW_CENTER[0],
+      lng: MOSCOW_CENTER[1]
+    };
+    baseList = [...PLACES].sort((a, b) => {
+      const da = distanceMeters(basePoint.lat, basePoint.lng, a.lat, a.lng);
+      const db = distanceMeters(basePoint.lat, basePoint.lng, b.lat, b.lng);
+      return da - db;
+    });
+  } else if (currentMode === "guide") {
+    baseList = guidePlaces;
+  }
+
+  const filtered = baseList.filter((p) => {
+    if (!term) return true;
+    return (
+      p.name.toLowerCase().includes(term) ||
+      p.address.toLowerCase().includes(term)
+    );
   });
 
-  if (cashbackBannerEl) {
-    cashbackBannerEl.addEventListener("click", toggleCashbackRain);
-  }
+  renderMarkers(filtered);
+  renderPointsList(filtered);
 }
 
-// ---- старт приложения ----
-function initApp() {
-  if (!ALL_PLACES.length) {
-    console.error("Нет данных PLACES. Проверь places.js");
+// ---------------------- СЛУШАТЕЛИ ----------------------
+
+function initUI() {
+  // фильтры
+  filterCashbackBtn.addEventListener("click", () => setMode("cashback"));
+  filterNearbyBtn.addEventListener("click", () => setMode("nearby"));
+
+  // клик по карточке "Гид по району"
+  if (guideEntry) {
+    guideEntry.addEventListener("click", () => setMode("guide"));
   }
 
+  // клики по шагам 1–5
+  if (guideStepsContainer) {
+    guideStepsContainer.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-step]");
+      if (!btn) return;
+      const step = Number(btn.getAttribute("data-step"));
+      if (!step || step < 1 || step > 5) return;
+      currentGuideStep = step;
+      updateGuideUI();
+    });
+  }
+
+  // поиск
+  if (searchInput) {
+    searchInput.addEventListener("input", () => {
+      applySearchFilter();
+    });
+  }
+
+  // режим по умолчанию
+  setMode("cashback");
+}
+
+// ---------------------- СТАРТ ----------------------
+
+document.addEventListener("DOMContentLoaded", () => {
   initMap();
-  attachEventListeners();
-  initGuideSteps();
-  setMode("cashback"); // дефолтный режим
-
-  renderMarkers();
-  renderPlacesList();
-}
-
-document.addEventListener("DOMContentLoaded", initApp);
+  initUI();
+});
