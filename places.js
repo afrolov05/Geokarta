@@ -1,4 +1,4 @@
-export const PLACES = [
+window.PLACES = [
   {
     id: 'p_001',
     name: "Лукойл",
