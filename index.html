@@ -2,35 +2,54 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Московский кэшбэк</title>
+  <title>Cashback Map</title>
 
-  <!-- Leaflet (карта OpenStreetMap) -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.0.0/mapbox-gl.css" rel="stylesheet" />
 
-  <link rel="stylesheet" href="style.css" />
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: sans-serif;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
 </head>
 
 <body>
-
   <div id="map"></div>
 
-  <!-- карточка места -->
-  <div id="place-card" class="hidden"></div>
-
-  <!-- нижнее меню -->
-  <div id="bottom-menu">
-    <button id="btn-nearby">Рядом с вами</button>
-    <button id="btn-cashback">Ваш кэшбэк</button>
-    <button id="btn-guide">Гид по району</button>
-  </div>
-
+  <script src="https://api.mapbox.com/mapbox-gl-js/v3.0.0/mapbox-gl.js"></script>
   <script src="data/places.js"></script>
-  <script src="app.js"></script>
 
+  <script>
+    mapboxgl.accessToken = 'ТВОЙ_MAPBOX_TOKEN';
+
+    const map = new mapboxgl.Map({
+      container: 'map',
+      style: 'mapbox://styles/mapbox/light-v11',
+      center: [37.62, 55.75],
+      zoom: 10
+    });
+
+    PLACES.forEach(place => {
+      new mapboxgl.Marker()
+        .setLngLat([place.lng, place.lat])
+        .setPopup(
+          new mapboxgl.Popup().setHTML(
+            `<b>${place.name}</b><br>
+            ${place.category}<br>
+            <small>${place.address}</small><br>
+            Кешбэк: ${place.cashbackPercent}%`
+          )
+        )
+        .addTo(map);
+    });
+  </script>
 </body>
 </html>
