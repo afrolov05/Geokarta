@@ -1,11 +1,11 @@
-export const DISTRICTS = [
-  { id: "d_01", name: "ЦАО", avgCashback: 6.2 },
-  { id: "d_02", name: "САО", avgCashback: 5.8 },
-  { id: "d_03", name: "СВАО", avgCashback: 6.0 },
-  { id: "d_04", name: "ВАО", avgCashback: 5.5 },
-  { id: "d_05", name: "ЮВАО", avgCashback: 5.7 },
-  { id: "d_06", name: "ЮАО", avgCashback: 6.1 },
-  { id: "d_07", name: "ЮЗАО", avgCashback: 6.3 },
-  { id: "d_08", name: "ЗАО", avgCashback: 6.0 },
-  { id: "d_09", name: "СЗАО", avgCashback: 5.9 }
+const DISTRICTS = [
+  { name: "ЦАО", lat: 55.7558, lng: 37.6173 },
+  { name: "САО", lat: 55.8470, lng: 37.5400 },
+  { name: "СВАО", lat: 55.8600, lng: 37.6500 },
+  { name: "ВАО", lat: 55.7800, lng: 37.8000 },
+  { name: "ЮВАО", lat: 55.7000, lng: 37.7500 },
+  { name: "ЮАО", lat: 55.6500, lng: 37.6200 },
+  { name: "ЮЗАО", lat: 55.6600, lng: 37.5200 },
+  { name: "ЗАО", lat: 55.7200, lng: 37.4500 },
+  { name: "СЗАО", lat: 55.8200, lng: 37.4500 },
 ];
