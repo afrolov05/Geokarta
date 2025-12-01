@@ -2,44 +2,90 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Geokarta</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Геокарта</title>
+
+  <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <!-- Основные стили -->
+  <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
-  <div id="map"></div>
 
-  <div class="panel">
-    <div class="handle"></div>
+<!-- MAP -->
+<div id="map"></div>
 
-    <input id="search" class="search" placeholder="Поиск" />
+<!-- BOTTOM MOBILE PANEL -->
+<div id="bottomPanel">
 
-    <div class="filters">
-      <button id="filter-cashback">Ваш кешбэк</button>
-      <button id="filter-near">Рядом с вами</button>
-      <button id="filter-categories">Категории</button>
+  <!-- SEARCH -->
+  <div class="search-box">
+    <span class="icon">🔍</span>
+    <input id="searchInput" type="text" placeholder="Поиск">
+  </div>
+
+  <!-- FILTERS -->
+  <div class="filters">
+    <button id="filterCashbackBtn" class="filter-btn active">Ваш кэшбэк</button>
+    <button id="filterNearbyBtn" class="filter-btn">Рядом с вами</button>
+    <!-- Категории больше НЕ используем -->
+  </div>
+
+  <!-- GUIDE ENTRY CARD -->
+  <div id="guideEntry" class="guide-entry">
+    <div class="guide-title">Гид по району ></div>
+    <div class="guide-sub">Выберите округ, покажем только кафе и рестораны</div>
+  </div>
+
+  <!-- GUIDE PANEL -->
+  <div id="guidePanel" class="guide-panel">
+
+    <!-- steps 1..5 -->
+    <div id="guideSteps" class="guide-steps">
+      <div data-step="1" class="guide-step">1</div>
+      <div data-step="2" class="guide-step">2</div>
+      <div data-step="3" class="guide-step">3</div>
+      <div data-step="4" class="guide-step">4</div>
+      <div data-step="5" class="guide-step">5</div>
     </div>
 
-    <div class="guide-block">
-      <div class="guide-title">Гид по району</div>
-      <div class="guide-buttons">
-        <button class="guide-btn" data-num="1">1</button>
-        <button class="guide-btn" data-num="2">2</button>
-        <button class="guide-btn" data-num="3">3</button>
-        <button class="guide-btn" data-num="4">4</button>
-        <button class="guide-btn" data-num="5">5</button>
-      </div>
+    <div id="guideStepTitle" class="guide-step-title">
+      1. Выберите место
     </div>
 
-    <div class="alert">
-      <div class="alert-icon">%</div>
-      <div class="alert-text">Ожидаются осадки в виде кэшбэка</div>
+    <!-- guide card -->
+    <div class="guide-card">
+      <div id="guideCardName" class="guide-card-name">Название</div>
+      <div id="guideCardAddress" class="guide-card-address">Адрес</div>
+      <div id="guideCardCashback" class="guide-card-cashback">0% кэшбэка</div>
     </div>
   </div>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="places.js"></script>
-  <script src="app.js"></script>
+  <!-- CASHBACK RAIN (banner) -->
+  <div class="rain-banner">
+    <div class="rain-icon">%</div>
+    <div class="rain-content">
+      <div class="rain-title">Ожидаются осадки в виде кэшбэка</div>
+      <div class="rain-sub">Точки рядом с высоким процентом</div>
+    </div>
+    <div class="rain-arrow">›</div>
+  </div>
+
+  <!-- LIST OF POINTS -->
+  <div id="pointsList" class="points-list"></div>
+
+</div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- DATA -->
+<script src="places.js"></script>
+
+<!-- APP LOGIC -->
+<script src="app.js"></script>
+
 </body>
 </html>
